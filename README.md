@@ -1,6 +1,12 @@
 # 魔女审判资料管理系统
 
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![License](https://img.shields.io/badge/license-Educational-green.svg)](LICENSE)
+
 数据库课程设计项目 - 基于 C# WinForms 和 SQL Server 的魔女审判管理系统
+
+**当前版本：V1.0.1**
 
 ## 项目简介
 

@@ -136,16 +136,17 @@ namespace WitchTrialSystem.UI
         }
 
         /// <summary>
-        /// 退出程序
+        /// 退出到登录界面
         /// </summary>
         private void DoLogout()
         {
-            var result = MessageBox.Show("确定要退出程序吗？", "退出程序",
+            var result = MessageBox.Show("确定要退出登录吗？", "退出登录",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
-                Application.Exit();  // 优雅地关闭程序
-                // 或者使用 Environment.Exit(0); // 强制关闭程序
+                var login = new LoginForm();
+                login.Show();
+                this.Close();
             }
         }
         

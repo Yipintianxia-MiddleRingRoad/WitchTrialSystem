@@ -67,7 +67,7 @@ git push -u origin main
 
 ```bash
 # 克隆项目到本地（替换成实际的仓库地址）
-git clone https://github.com/你的用户名/WitchTrialSystem.git
+git clone https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem.git
 
 # 进入项目文件夹
 cd WitchTrialSystem

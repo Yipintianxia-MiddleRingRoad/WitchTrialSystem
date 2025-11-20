@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 using WitchTrialSystem.DAL;
 using WitchTrialSystem.BLL;
+using WitchTrialSystem.UI;
 
 namespace WitchTrialSystem
 {
@@ -400,42 +401,13 @@ namespace WitchTrialSystem
         /// </summary>
         private void OnLogout()
         {
-            // 简易对话框：输入 旧密码 / 新密码 / 确认密码
-            using var f = new Form { Width = 360, Height = 220, Text = "修改密码", StartPosition = FormStartPosition.CenterParent };
-            var l1 = new Label { Left = 12, Top = 16, Text = "旧密码", AutoSize = true };
-            var l2 = new Label { Left = 12, Top = 56, Text = "新密码", AutoSize = true };
-            var l3 = new Label { Left = 12, Top = 96, Text = "确认新密码", AutoSize = true };
-            var t1 = new TextBox { Left = 100, Top = 12, Width = 220, UseSystemPasswordChar = true };
-            var t2 = new TextBox { Left = 100, Top = 52, Width = 220, UseSystemPasswordChar = true };
-            var t3 = new TextBox { Left = 100, Top = 92, Width = 220, UseSystemPasswordChar = true };
-            var ok = new Button  { Left = 160, Top = 130, Width = 70, Text = "确定", DialogResult = DialogResult.OK };
-            var ca = new Button  { Left = 250, Top = 130, Width = 70, Text = "取消", DialogResult = DialogResult.Cancel };
-            f.Controls.AddRange(new Control[] { l1, l2, l3, t1, t2, t3, ok, ca });
-            f.AcceptButton = ok; f.CancelButton = ca;
-
-            if (f.ShowDialog(this) != DialogResult.OK) return;
-
-            var oldPwd = t1.Text; var newPwd = t2.Text; var confirm = t3.Text;
-            if (string.IsNullOrEmpty(oldPwd) || string.IsNullOrEmpty(newPwd))
-            { MessageBox.Show("密码不能为空。"); return; }
-            if (newPwd != confirm)
-            { MessageBox.Show("两次输入的新密码不一致。"); return; }
-
-            try
+            var result = MessageBox.Show("确定要退出登录吗？", "退出登录",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
             {
-                var bll = new UserBLL();
-                var okChange = bll.ChangePassword(_username, oldPwd, newPwd);
-                if (!okChange)
-                {
-                    MessageBox.Show("修改失败：旧密码不正确或账号不存在。");
-                    return;
-                }
-                MessageBox.Show("密码已更新。请使用新密码重新登录。");
-                OnLogout();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("修改密码出错：" + ex.Message);
+                var login = new LoginForm();
+                login.Show();
+                this.Close();
             }
         }
 
