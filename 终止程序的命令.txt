@@ -1,2 +1,1 @@
-如果你想终止程序，把如下代码放到终端运行：
 Stop-Process -Name "WitchTrialSystem" -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; dotnet build

@@ -37,18 +37,18 @@ namespace WitchTrialSystem
         private readonly Label _lblMagic = new() { AutoSize = true, MaximumSize = new Size(520, 0) };
 
         // 列表与工具栏
-        private readonly ComboBox _cbIsland = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
-        private readonly ComboBox _cbBatch  = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
-        private readonly TextBox  _tbSearch = new() { PlaceholderText = "按名字搜索", Width = 220 };
-        private readonly Button   _btnRefresh = new() { Text = "刷新", Width = 80 };
-        private readonly Button   _btnAdd     = new() { Text = "新增魔女", Width = 100 };
+        private readonly ComboBox _cbIsland = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160, Height = 35 };
+        private readonly ComboBox _cbBatch  = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120, Height = 35 };
+        private readonly TextBox  _tbSearch = new() { PlaceholderText = "按名字搜索", Width = 220, Height = 35 };
+        private readonly Button   _btnRefresh = new() { Text = "刷新", Width = 80, Height = 35 };
+        private readonly Button   _btnAdd     = new() { Text = "新增魔女", Width = 100, Height = 35 };
         private readonly Label    _status     = new() { AutoSize = true, ForeColor = Color.DimGray, Padding = new Padding(8,2,8,2) };
         private readonly DataGridView _grid   = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false };
 
         // 用户操作按钮
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
-        private readonly Button _btnStatus     = new() { Text = "更改状态", Width = 100 };
+        private readonly Button _btnStatus     = new() { Text = "更改状态", Width = 100, Height = 35 };
         
         #endregion
 
@@ -64,7 +64,8 @@ namespace WitchTrialSystem
 
             InitializeComponent();
             Text = "魔女审判 · 主面板";
-            Width = 980; Height = 640; StartPosition = FormStartPosition.CenterScreen;
+            WindowState = FormWindowState.Maximized; // 全屏显示
+            StartPosition = FormStartPosition.CenterScreen;
 
             // —— 顶部：用户卡片 —— //
             var card = BuildUserCard();
@@ -74,11 +75,11 @@ namespace WitchTrialSystem
         var bar = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 54,                       // 稍微高一点，给滚动条留空间
+            Height = 80,                       // 进一步增加高度，确保按钮完整显示
             FlowDirection = FlowDirection.LeftToRight,
             WrapContents = false,              // ✅ 单行，不换行
             AutoScroll = true,                 // ✅ 超出时出现横向滚动条
-            Padding = new Padding(8, 6, 8, 6),
+            Padding = new Padding(15, 15, 15, 15),
             BackColor = Color.WhiteSmoke
         };
 
@@ -97,7 +98,7 @@ namespace WitchTrialSystem
 
 
             // —— 第三行：数据网格 —— //
-            _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
             Controls.Add(_grid);
@@ -310,13 +311,42 @@ namespace WitchTrialSystem
             // if (_grid.Columns.Contains("BatchID"))   _grid.Columns["BatchID"].HeaderText = "批次";
 
             var cols = _grid.Columns;
-            var c = cols["WitchID"];   if (c != null) c.HeaderText = "ID";
-            c = cols["Name"];          if (c != null) c.HeaderText = "姓名";
-            c = cols["Magic"];         if (c != null) c.HeaderText = "魔法";
-            c = cols["PrisonerNo"];    if (c != null) c.HeaderText = "囚犯编号";
-            c = cols["Status"];        if (c != null) c.HeaderText = "状态";
-            c = cols["IslandID"];      if (c != null) c.HeaderText = "岛";
-            c = cols["BatchID"];       if (c != null) c.HeaderText = "批次";
+            var c = cols["WitchID"];   
+            if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = 0; }
+            
+            c = cols["PrisonerNo"];    
+            if (c != null) { c.HeaderText = "囚犯编号"; c.Width = 100; c.DisplayIndex = 1; }
+            
+            c = cols["Name"];          
+            if (c != null) { c.HeaderText = "姓名"; c.Width = 200; c.DisplayIndex = 2; }
+            
+            c = cols["Magic"];         
+            if (c != null) { c.HeaderText = "魔法"; c.Width = 120; c.DisplayIndex = 3; }
+            
+            c = cols["Status"];        
+            if (c != null) { c.HeaderText = "状态"; c.Width = 80; c.DisplayIndex = 4; }
+            
+            c = cols["IslandID"];      
+            if (c != null) { c.HeaderText = "岛"; c.Width = 50; c.DisplayIndex = 5; }
+            
+            c = cols["BatchID"];       
+            if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = 6; }
+            
+            c = cols["ExecutionResult"];
+            if (c != null) { c.HeaderText = "处刑结果"; c.Width = 100; c.DisplayIndex = 7; }
+            
+            // 隐藏图像路径列
+            c = cols["AvatarPath"];
+            if (c != null) { c.Visible = false; }
+            
+            // 描述列占满剩余空间
+            c = cols["DescriptionPublic"];
+            if (c != null) 
+            { 
+                c.HeaderText = "描述"; 
+                c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                c.DisplayIndex = 8;
+            }
 
             _status.Text = $"共 {dt.Rows.Count} 条";
         }

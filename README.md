@@ -1,12 +1,12 @@
 # 魔女审判资料管理系统
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-Educational-green.svg)](LICENSE)
 
 数据库课程设计项目 - 基于 C# WinForms 和 SQL Server 的魔女审判管理系统
 
-**当前版本：V1.0.1**
+**当前版本：V1.2.0** - 五子棋系统完善 + 对局日志 + 管理面板优化！
 
 ## 项目简介
 
@@ -14,7 +14,9 @@
 - 用户登录与权限管理
 - 魔女图鉴系统（人物、证物、地图、规定、记录）
 - 手机界面（普通魔女用户）
-- 管理面板（管理员/典狱长/梅露露）
+- 管理面板（管理员/典狱长/梅露露）- 全屏优化
+- **五子棋对弈系统** - 完整功能
+- **对局日志系统** - 记录与查询
 
 ## 环境要求
 
@@ -27,7 +29,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <你的仓库地址>
+git clone https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem.git
 cd WitchTrialSystem
 ```
 
@@ -65,11 +67,16 @@ cd WitchTrialSystem
 
 ### 3. 创建数据库
 
-在 SQL Server Management Studio (SSMS) 中执行以下步骤：
+在 SQL Server Management Studio (SSMS) 中按顺序执行以下 SQL 脚本：
 
 1. 连接到你的 SQL Server 实例
-2. 打开并执行项目中的数据库脚本（如果有 `database.sql` 或类似文件）
+2. **依次执行以下三个 SQL 文件**：
+   - `database_init.sql` - 创建数据库、表结构和初始数据
+   - `add_gomoku_score_column.sql` - 添加五子棋积分字段
+   - `create_gomoku_match_log_table.sql` - 创建对局日志表
 3. 确保数据库名为 `WitchTrialWT`
+
+详细说明请查看 [数据库初始化说明.md](数据库初始化说明.md)
 
 ### 4. 准备资源文件
 
@@ -84,7 +91,9 @@ Images/
   │   ├── evidence_bg.png       # 证物背景
   │   ├── map_bg.png            # 地图背景
   │   ├── rules_bg.png          # 规定背景
-  │   └── records_bg.png        # 记录背景
+  │   ├── records_bg.png        # 记录背景
+  │   ├── gomoku_mode_bg.png    # 五子棋模式选择背景（NEW）
+  │   └── gomoku_board_bg.png   # 五子棋棋盘背景（NEW）
   ├── characters/               # 角色姓名图片
   └── _placeholder.png          # 占位图
 
@@ -108,23 +117,36 @@ dotnet run
 
 ```
 WitchTrialSystem/
-├── BLL/                    # 业务逻辑层
-├── DAL/                    # 数据访问层
-│   └── DBHelper.cs        # 数据库帮助类
-├── UI/                     # 用户界面层
-│   ├── LoginForm.cs       # 登录界面
-│   ├── PhoneForm.cs       # 手机界面
-│   ├── PokedexForm.cs     # 图鉴·人物
-│   ├── BasePokedexForm.cs # 图鉴基类
-│   ├── EvidenceForm.cs    # 图鉴·证物
-│   ├── MapForm.cs         # 图鉴·地图
-│   ├── RulesForm.cs       # 图鉴·规定
-│   └── RecordsForm.cs     # 图鉴·记录
-├── Images/                 # 图片资源
-├── Fonts/                  # 字体资源
-├── Form1.cs               # 管理面板
-├── Program.cs             # 程序入口
-└── appsettings.json       # 配置文件（不上传到 Git）
+├── BLL/                        # 业务逻辑层
+│   ├── Security.cs            # 密码加密验证
+│   └── UserBLL.cs             # 用户业务逻辑
+├── DAL/                        # 数据访问层
+│   ├── DBHelper.cs            # 数据库帮助类
+│   ├── UserDAL.cs             # 用户数据访问
+│   ├── UserProfileDAL.cs      # 用户档案数据访问
+│   ├── WitchDAL.cs            # 魔女数据访问
+│   ├── GomokuMatchLogDAL.cs   # 对局日志数据访问
+│   └── Models/                # 数据模型
+├── UI/                         # 用户界面层
+│   ├── LoginForm.cs           # 登录界面
+│   ├── PhoneForm.cs           # 手机界面
+│   ├── PokedexForm.cs         # 图鉴·人物
+│   ├── BasePokedexForm.cs     # 图鉴基类
+│   ├── EvidenceForm.cs        # 图鉴·证物
+│   ├── MapForm.cs             # 图鉴·地图
+│   ├── RulesForm.cs           # 图鉴·规定
+│   ├── RecordsForm.cs         # 图鉴·记录
+│   ├── GomokuModeForm.cs      # 五子棋模式选择
+│   ├── GomokuBoardForm.cs     # 五子棋棋盘
+│   └── GomokuMatchLogForm.cs  # 对局日志
+├── Images/                     # 图片资源
+├── Fonts/                      # 字体资源
+├── Form1.cs                   # 管理面板（全屏优化）
+├── Program.cs                 # 程序入口
+├── appsettings.json           # 配置文件（不上传到 Git）
+├── add_gomoku_score_column.sql           # 添加积分字段
+├── create_gomoku_match_log_table.sql     # 创建对局日志表
+└── 数据库命令整理后11_20.txt             # 完整数据库脚本
 ```
 
 ## 功能说明
@@ -142,10 +164,41 @@ WitchTrialSystem/
 - **规定**：查看规定信息
 - **记录**：查看记录信息
 
+### 五子棋对弈系统
+
+- **入口**：手机界面底部左下角红色图标
+- **模式选择**：单设备对弈（本地双人）/ 多设备对弈（开发中）
+- **对手验证**：选择对手并输入密码验证
+- **核心功能**：
+  - 15x15 标准棋盘，黑子先手
+  - 实时计时（步时60秒 + 局时10分钟，13ms精度）
+  - 五子连珠自动判定
+  - 积分系统（胜 +10，负 -5，和棋 0）
+  - 悔棋功能（魔法按钮）
+  - 和棋功能（伪证按钮）
+  - 方正小标宋字体显示
+
+### 对局日志系统
+
+- **入口**：手机界面底部第三个按钮（放大镜图标）
+- **功能**：
+  - 查看所有对局记录
+  - 按玩家筛选（单个或两个玩家）
+  - 显示囚人番号、对局时间、结果、分数变化
+  - 2200x1300 大窗口，完整显示所有信息
+
+### 积分排行榜
+
+- **入口**：手机界面底部第二个按钮（箭头/消息框图标）
+- **功能**：显示所有魔女的五子棋积分排名（前13名）
+
+详细说明请查看 [五子棋功能说明.md](五子棋功能说明.md) 和 [五子棋测试指南.md](五子棋测试指南.md)
+
 ### 导航
 
 - 图鉴页面右侧有导航按钮，可在五个页面间切换
 - 右上角退出按钮返回手机界面（魔女）或登录界面（管理员）
+- 五子棋界面支持 Esc 键快速返回
 
 ## 常见问题
 

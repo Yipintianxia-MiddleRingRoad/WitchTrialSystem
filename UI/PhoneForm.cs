@@ -25,6 +25,24 @@ namespace WitchTrialSystem.UI
             Cursor = Cursors.Hand
         };
         
+        private readonly Panel _btnGomoku = new()  // 五子棋按钮（左下角红色图标）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnRanking = new()  // 排行榜按钮（底部第二个，箭头/消息框图标）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnMatchLog = new()  // 对局日志按钮（底部第三个，放大镜图标）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
         private readonly Panel _btnExit = new() 
         { 
             BackColor = Color.Transparent,
@@ -97,6 +115,24 @@ namespace WitchTrialSystem.UI
             _btnPokedex.Top = 120;   // 状态栏下方
             _bg.Controls.Add(_btnPokedex);
 
+            // 五子棋按钮（底部左下角红色图标，第一个）
+            _btnGomoku.Size = new Size(60, 60);  // 底部图标大小
+            _btnGomoku.Left = 70;   // 底部左侧第一个图标
+            _btnGomoku.Top = ClientSize.Height - 145;  // 底部位置（向上移动25像素：120+25=145）
+            _bg.Controls.Add(_btnGomoku);
+
+            // 排行榜按钮（底部第二个，箭头/消息框图标）
+            _btnRanking.Size = new Size(60, 60);  // 底部图标大小
+            _btnRanking.Left = 140;  // 底部第二个图标位置（第一个70，间隔70）
+            _btnRanking.Top = ClientSize.Height - 145;
+            _bg.Controls.Add(_btnRanking);
+
+            // 对局日志按钮（底部第三个，放大镜图标）
+            _btnMatchLog.Size = new Size(60, 60);  // 底部图标大小
+            _btnMatchLog.Left = 210;  // 底部第三个图标位置（第一个70，间隔70）
+            _btnMatchLog.Top = ClientSize.Height - 145;
+            _bg.Controls.Add(_btnMatchLog);
+
             // 退出按钮（右上角X）
             _btnExit.Size = new Size(50, 50);
             _btnExit.Left = ClientSize.Width - 80;  // 右上角
@@ -105,10 +141,16 @@ namespace WitchTrialSystem.UI
 
             // 绑定点击事件
             _btnPokedex.Click += OnPokedexClick;
+            _btnGomoku.Click += OnGomokuClick;
+            _btnRanking.Click += OnRankingClick;
+            _btnMatchLog.Click += OnMatchLogClick;
             _btnExit.Click += OnExitClick;
 
             // 确保按钮在最上层
             _btnPokedex.BringToFront();
+            _btnGomoku.BringToFront();
+            _btnRanking.BringToFront();
+            _btnMatchLog.BringToFront();
             _btnExit.BringToFront();
         }
         
@@ -128,6 +170,97 @@ namespace WitchTrialSystem.UI
         }
 
         /// <summary>
+        /// 点击五子棋按钮：跳转到五子棋模式选择界面
+        /// </summary>
+        private void OnGomokuClick(object? sender, EventArgs e)
+        {
+            var gomokuModeForm = new GomokuModeForm(_username);
+            gomokuModeForm.FormClosed += (s, args) => this.Show();  // 五子棋窗口关闭时显示手机界面
+            this.Hide();
+            gomokuModeForm.Show();
+        }
+
+        /// <summary>
+        /// 点击排行榜按钮：显示五子棋积分排行榜
+        /// </summary>
+        private void OnRankingClick(object? sender, EventArgs e)
+        {
+            ShowGomokuRanking();
+        }
+
+        /// <summary>
+        /// 点击对局日志按钮：显示五子棋对局日志
+        /// </summary>
+        private void OnMatchLogClick(object? sender, EventArgs e)
+        {
+            var matchLogForm = new GomokuMatchLogForm(_username);
+            matchLogForm.ShowDialog();
+        }
+
+        /// <summary>
+        /// 显示五子棋积分排行榜
+        /// </summary>
+        private void ShowGomokuRanking()
+        {
+            try
+            {
+                // 查询所有魔女的五子棋积分，按积分降序排列
+                const string sql = @"
+SELECT TOP 13 u.Username, w.Name AS WitchName, u.GomokuScore
+FROM wt.[User] u
+LEFT JOIN wt.UserWitch uw ON uw.UserID = u.UserID
+LEFT JOIN wt.Witch w ON w.WitchID = uw.WitchID
+WHERE u.RoleID = 4
+ORDER BY u.GomokuScore DESC, u.Username ASC";
+
+                var dt = WitchTrialSystem.DAL.DBHelper.ExecDataTable(sql);
+                
+                if (dt.Rows.Count == 0)
+                {
+                    MessageBox.Show("暂无排行榜数据", "五子棋排行榜", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 构建排行榜文本
+                var rankingText = new System.Text.StringBuilder();
+                rankingText.AppendLine("═══════════════════════════");
+                rankingText.AppendLine("        五子棋积分排行榜");
+                rankingText.AppendLine("═══════════════════════════");
+                rankingText.AppendLine();
+
+                int rank = 1;
+                foreach (System.Data.DataRow row in dt.Rows)
+                {
+                    string username = row["Username"].ToString() ?? "";
+                    string witchName = row["WitchName"] == DBNull.Value ? username : row["WitchName"].ToString() ?? username;
+                    int score = row["GomokuScore"] == DBNull.Value ? 0 : Convert.ToInt32(row["GomokuScore"]);
+
+                    // 前三名使用特殊标记
+                    string rankIcon = rank switch
+                    {
+                        1 => "🥇",
+                        2 => "🥈",
+                        3 => "🥉",
+                        _ => $"{rank}."
+                    };
+
+                    rankingText.AppendLine($"{rankIcon,4} {witchName,-12} {score,6} 分");
+                    rank++;
+                }
+
+                rankingText.AppendLine();
+                rankingText.AppendLine("═══════════════════════════");
+
+                // 显示排行榜
+                MessageBox.Show(rankingText.ToString(), "五子棋排行榜", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载排行榜失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 点击退出按钮
         /// </summary>
         private void OnExitClick(object? sender, EventArgs e)
@@ -144,9 +277,24 @@ namespace WitchTrialSystem.UI
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+                _isLoggingOut = true; // 标记正在退出
                 var login = new LoginForm();
                 login.Show();
                 this.Close();
+            }
+        }
+        
+        private bool _isLoggingOut = false; // 标记是否正在退出
+        
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            
+            // 如果是用户关闭窗口（点击X），返回登录界面
+            if (e.CloseReason == CloseReason.UserClosing && !_isLoggingOut)
+            {
+                e.Cancel = true; // 取消关闭
+                DoLogout(); // 执行退出登录逻辑
             }
         }
         
