@@ -15,14 +15,38 @@ namespace WitchTrialSystem.DAL
 
         public DataTable GetWitches(int? islandId=null, int? batchId=null, string? nameLike=null)
         {
-            var sql = @"SELECT WitchID, Name, Magic, PrisonerNo, [Status], IslandID, BatchID, AvatarPath, DescriptionPublic
+            var sql = @"SELECT 
+                            WitchID,
+                            PrisonerNo,
+                            PersonalNo,
+                            Name,
+                            Gender,
+                            BirthDate,
+                            DATEDIFF(YEAR, BirthDate, GETDATE()) AS Age,
+                            Height,
+                            Weight,
+                            BloodType,
+                            Magic,
+                            [Status],
+                            HighestEducation,
+                            Birthplace,
+                            Phone,
+                            Email,
+                            Skills,
+                            Hobbies,
+                            Dreams,
+                            Trauma,
+                            IslandID,
+                            BatchID,
+                            AvatarPath,
+                            DescriptionPublic
                         FROM wt.Witch WHERE 1=1";
             var ps = new System.Collections.Generic.List<SqlParameter>();
             if (islandId.HasValue) { sql += " AND IslandID=@is"; ps.Add(new SqlParameter("@is", islandId.Value)); }
             if (batchId.HasValue)  { sql += " AND BatchID=@ba";  ps.Add(new SqlParameter("@ba", batchId.Value)); }
             if (!string.IsNullOrWhiteSpace(nameLike))
             { sql += " AND Name LIKE @nm"; ps.Add(new SqlParameter("@nm", "%"+nameLike.Trim()+"%")); }
-            sql += " ORDER BY WitchID DESC";
+            sql += " ORDER BY PrisonerNo";
             return DBHelper.ExecDataTable(sql, ps.ToArray());
         }
 
@@ -45,6 +69,58 @@ namespace WitchTrialSystem.DAL
                 new SqlParameter("@id", witchId),
                 new SqlParameter("@st", newStatus),
                 new SqlParameter("@er", (object?)execResult ?? DBNull.Value));
+        }
+
+        /// <summary>
+        /// 获取单个魔女的完整详细信息
+        /// </summary>
+        public DataTable GetWitchDetail(int witchId)
+        {
+            const string sql = @"
+                SELECT 
+                    WitchID,
+                    PrisonerNo,
+                    PersonalNo,
+                    Name,
+                    FormerName,
+                    Gender,
+                    BirthDate,
+                    DATEDIFF(YEAR, BirthDate, GETDATE()) AS Age,
+                    Ethnicity,
+                    Birthplace,
+                    Height,
+                    Weight,
+                    BloodType,
+                    Address,
+                    Phone,
+                    Email,
+                    LineAccount,
+                    HighestEducation,
+                    EducationHistory,
+                    WorkHistory,
+                    FamilyStructure,
+                    Father,
+                    Mother,
+                    OtherFamily1,
+                    OtherFamily2,
+                    OtherFamily3,
+                    Skills,
+                    Hobbies,
+                    Dreams,
+                    Dislikes,
+                    Trauma,
+                    Magic,
+                    [Status],
+                    ExecutionResult,
+                    WitchTransformMethod,
+                    Remarks,
+                    IslandID,
+                    BatchID,
+                    AvatarPath,
+                    DescriptionPublic
+                FROM wt.Witch 
+                WHERE WitchID = @id";
+            return DBHelper.ExecDataTable(sql, new SqlParameter("@id", witchId));
         }
 
     }

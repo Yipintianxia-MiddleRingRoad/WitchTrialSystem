@@ -57,6 +57,7 @@ namespace WitchTrialSystem.UI
         private readonly Panel _btnBack = new() { BackColor = Color.Transparent, Cursor = Cursors.Hand };
         private readonly Panel _btnUndo = new() { BackColor = Color.Transparent, Cursor = Cursors.Hand }; // 魔法（悔棋）
         private readonly Panel _btnDraw = new() { BackColor = Color.Transparent, Cursor = Cursors.Hand }; // 伪证（和棋）
+        private readonly Panel _btnSurrender = new() { BackColor = Color.Transparent, Cursor = Cursors.Hand }; // 疑问（认输）
         
         // 头像显示
         private readonly PictureBox _picPlayer1Avatar = new() { BackColor = Color.Transparent, SizeMode = PictureBoxSizeMode.Zoom };
@@ -402,6 +403,12 @@ WHERE u.RoleID = 4 AND u.Username != @u";
             _btnDraw.Location = new Point(1850, 680);  // 往右移动到1850
             _btnDraw.Click += OnDrawClick;
             _bg.Controls.Add(_btnDraw);
+            
+            // 疑问按钮（认输）- 在魔法和伪证按钮中间
+            _btnSurrender.Size = new Size(150, 80);  // 扩大热键区域
+            _btnSurrender.Location = new Point(1715, 680);  // 中间位置：(1580+1850)/2=1715
+            _btnSurrender.Click += OnSurrenderClick;
+            _bg.Controls.Add(_btnSurrender);
             
             // ========== 下方玩家（当前用户 Player1）头像 ==========
             // 原位置中心 (1604, 1114)，向左72，向上123，再向下20，再向下15，放大到240x240
@@ -926,6 +933,48 @@ WHERE u.RoleID = 4 AND u.Username != @u";
                 // 保存对局记录（和棋）
                 SaveMatchLog(winner: 0);
             }
+        }
+
+        /// <summary>
+        /// 认输（疑问按钮）
+        /// </summary>
+        private void OnSurrenderClick(object? sender, EventArgs e)
+        {
+            if (_gameOver)
+            {
+                MessageBox.Show("游戏已结束！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            
+            // 获取当前玩家和对手
+            string currentPlayerName = _currentPlayer == 1 ? _player1Name : _player2Name;
+            string opponentName = _currentPlayer == 1 ? _player2Name : _player1Name;
+            
+            var result = MessageBox.Show(
+                $"魔法：疑问\n{currentPlayerName}请求认输，{opponentName}是否同意？",
+                "认输确认",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+            
+            if (result == DialogResult.Yes)
+            {
+                // 对手同意，认输成功
+                _gameOver = true;
+                _timer.Stop();
+                
+                int winner = _currentPlayer == 1 ? 2 : 1; // 对手获胜
+                string winnerName = winner == 1 ? _player1Name : _player2Name;
+                
+                MessageBox.Show($"{winnerName} 接受认输，获得胜利！", "游戏结束", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 保存对局记录
+                SaveMatchLog(winner: winner);
+                
+                // 更新积分
+                UpdateScores(winner: winner);
+            }
+            // 如果对手不同意，什么都不做，继续游戏
         }
 
         /// <summary>

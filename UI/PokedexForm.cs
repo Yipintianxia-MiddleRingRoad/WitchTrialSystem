@@ -29,7 +29,13 @@ namespace WitchTrialSystem.UI
         private Font? _customFont;
         #endregion
 
-        #region 姓名映射配置（中文名→英文文件名）
+        #region 姓名映射配置（已废弃，现在直接使用囚犯编号）
+        /// <summary>
+        /// 姓名映射字典（已废弃）
+        /// 现在姓名图片直接使用囚犯编号命名，不再需要映射表
+        /// 保留此字典仅为了向后兼容，实际代码中不再使用
+        /// </summary>
+        [Obsolete("现在直接使用囚犯编号查找图片，此映射表已不再使用")]
         private static readonly Dictionary<string, string> NameMapping = new()
         {
             { "樱羽艾玛", "ema" }, { "二阶堂希罗", "hiro" }, { "夏目安安", "anan" },
@@ -437,7 +443,8 @@ namespace WitchTrialSystem.UI
 
             // 显示姓名（优先图片，其次文字）
             string characterName = Convert.ToString(row["Name"]) ?? "";
-            ShowCharacterName(characterName);
+            string prisonerNo = Convert.ToString(row["PrisonerNo"]) ?? "";
+            ShowCharacterName(characterName, prisonerNo);
 
             // 显示右侧信息
             _lblPrisonerNo.Text = Convert.ToString(row["PrisonerNo"]) ?? "—";
@@ -484,17 +491,29 @@ namespace WitchTrialSystem.UI
 
         /// <summary>
         /// 显示角色姓名（图片/文字切换）
+        /// 优先使用囚犯编号查找图片，如果没有则显示文字
         /// </summary>
-        private void ShowCharacterName(string characterName)
+        private void ShowCharacterName(string characterName, string prisonerNo)
         {
-            string imageFolder = Path.Combine(AppContext.BaseDirectory, "Images", "characters");
-            string fileName = GetFileNameForCharacter(characterName);
-            string nameImagePath = Path.Combine(imageFolder, $"{fileName}.png");
+            // 如果没有囚犯编号，直接显示文字
+            if (string.IsNullOrWhiteSpace(prisonerNo))
+            {
+                _namePanel.OverlayImage = null;
+                _namePanel.Invalidate();
+                _nameLabel.Text = characterName;
+                _nameLabel.Visible = true;
+                _nameImage.Visible = false;
+                return;
+            }
 
-            // 调试输出（保留原功能）
+            string imageFolder = Path.Combine(AppContext.BaseDirectory, "Images", "characters");
+            // 优先使用囚犯编号查找图片（适用于批次1和批次2）
+            string nameImagePath = Path.Combine(imageFolder, $"{prisonerNo}.png");
+
+            // 调试输出
             Console.WriteLine($"角色名: {characterName}");
-            Console.WriteLine($"文件名: {fileName}");
-            Console.WriteLine($"完整路径: {nameImagePath}");
+            Console.WriteLine($"囚犯编号: {prisonerNo}");
+            Console.WriteLine($"姓名图片路径: {nameImagePath}");
             Console.WriteLine($"文件存在: {File.Exists(nameImagePath)}");
 
             try
@@ -549,8 +568,10 @@ namespace WitchTrialSystem.UI
         }
 
         /// <summary>
-        /// 获取角色对应的文件名（优先级：数据库英文名→映射表→中文名小写）
+        /// 获取角色对应的文件名（已废弃，现在直接使用囚犯编号）
+        /// 保留此方法以保持代码兼容性，但不再使用
         /// </summary>
+        [Obsolete("现在直接使用囚犯编号查找图片，此方法已不再使用")]
         private string GetFileNameForCharacter(string characterName)
         {
             // 优先使用数据库中的英文名

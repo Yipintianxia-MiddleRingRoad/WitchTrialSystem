@@ -78,6 +78,9 @@ namespace WitchTrialSystem.UI
             
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            
+            // 设置应用程序图标
+            BLL.IconHelper.SetFormIcon(this);
             MaximizeBox = false;
             DoubleBuffered = true;
             KeyPreview = true;

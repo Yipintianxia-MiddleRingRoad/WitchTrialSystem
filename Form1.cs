@@ -66,6 +66,9 @@ namespace WitchTrialSystem
             Text = "魔女审判 · 主面板";
             WindowState = FormWindowState.Maximized; // 全屏显示
             StartPosition = FormStartPosition.CenterScreen;
+            
+            // 设置应用程序图标
+            IconHelper.SetFormIcon(this);
 
             // —— 顶部：用户卡片 —— //
             var card = BuildUserCard();
@@ -115,6 +118,7 @@ namespace WitchTrialSystem
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
             _btnStatus.Click += (_, __) => OnChangeWitchStatus();
+            _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
 
         }
 
@@ -311,41 +315,93 @@ namespace WitchTrialSystem
             // if (_grid.Columns.Contains("BatchID"))   _grid.Columns["BatchID"].HeaderText = "批次";
 
             var cols = _grid.Columns;
-            var c = cols["WitchID"];   
-            if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = 0; }
+            int displayIndex = 0;
             
-            c = cols["PrisonerNo"];    
-            if (c != null) { c.HeaderText = "囚犯编号"; c.Width = 100; c.DisplayIndex = 1; }
+            // 核心识别信息
+            var c = cols["PrisonerNo"];    
+            if (c != null) { c.HeaderText = "囚人番号"; c.Width = 80; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["PersonalNo"];    
+            if (c != null) { c.HeaderText = "个人番号"; c.Width = 120; c.DisplayIndex = displayIndex++; }
             
             c = cols["Name"];          
-            if (c != null) { c.HeaderText = "姓名"; c.Width = 200; c.DisplayIndex = 2; }
+            if (c != null) { c.HeaderText = "姓名"; c.Width = 100; c.DisplayIndex = displayIndex++; }
             
-            c = cols["Magic"];         
-            if (c != null) { c.HeaderText = "魔法"; c.Width = 120; c.DisplayIndex = 3; }
+            // 基本信息
+            c = cols["Gender"];        
+            if (c != null) { c.HeaderText = "性别"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Age"];           
+            if (c != null) { c.HeaderText = "年龄"; c.Width = 50; c.DisplayIndex = displayIndex++; }
             
             c = cols["Status"];        
-            if (c != null) { c.HeaderText = "状态"; c.Width = 80; c.DisplayIndex = 4; }
+            if (c != null) { c.HeaderText = "状态"; c.Width = 100; c.DisplayIndex = displayIndex++; }
             
+            // 身体特征
+            c = cols["Height"];        
+            if (c != null) { c.HeaderText = "身高"; c.Width = 60; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Weight"];        
+            if (c != null) { c.HeaderText = "体重"; c.Width = 60; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["BloodType"];     
+            if (c != null) { c.HeaderText = "血型"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+            
+            // 能力信息
+            c = cols["Magic"];         
+            if (c != null) { c.HeaderText = "魔法"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+            
+            // 教育与背景
+            c = cols["HighestEducation"];
+            if (c != null) { c.HeaderText = "最高学历"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Birthplace"];    
+            if (c != null) { c.HeaderText = "籍贯"; c.Width = 80; c.DisplayIndex = displayIndex++; }
+            
+            // 联系方式
+            c = cols["Phone"];         
+            if (c != null) { c.HeaderText = "电话"; c.Width = 110; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Email"];         
+            if (c != null) { c.HeaderText = "邮箱"; c.Width = 180; c.DisplayIndex = displayIndex++; }
+            
+            // 个性特征
+            c = cols["Skills"];        
+            if (c != null) { c.HeaderText = "技能特长"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Hobbies"];       
+            if (c != null) { c.HeaderText = "兴趣爱好"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Dreams"];        
+            if (c != null) { c.HeaderText = "理想"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+            
+            c = cols["Trauma"];        
+            if (c != null) { c.HeaderText = "心理创伤"; c.Width = 200; c.DisplayIndex = displayIndex++; }
+            
+            // 系统字段
             c = cols["IslandID"];      
-            if (c != null) { c.HeaderText = "岛"; c.Width = 50; c.DisplayIndex = 5; }
+            if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
             
             c = cols["BatchID"];       
-            if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = 6; }
+            if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = displayIndex++; }
             
-            c = cols["ExecutionResult"];
-            if (c != null) { c.HeaderText = "处刑结果"; c.Width = 100; c.DisplayIndex = 7; }
+            c = cols["WitchID"];   
+            if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = displayIndex++; }
             
-            // 隐藏图像路径列
+            // 隐藏字段
             c = cols["AvatarPath"];
             if (c != null) { c.Visible = false; }
+            
+            c = cols["BirthDate"];
+            if (c != null) { c.Visible = false; } // 已经显示年龄，不需要显示出生日期
             
             // 描述列占满剩余空间
             c = cols["DescriptionPublic"];
             if (c != null) 
             { 
-                c.HeaderText = "描述"; 
+                c.HeaderText = "公开描述"; 
                 c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                c.DisplayIndex = 8;
+                c.DisplayIndex = displayIndex++;
             }
 
             _status.Text = $"共 {dt.Rows.Count} 条";
@@ -502,6 +558,37 @@ namespace WitchTrialSystem
             catch (Exception ex)
             {
                 MessageBox.Show("更新失败：" + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 双击单元格查看魔女详情
+        /// </summary>
+        private void Grid_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            // 忽略列头点击
+            if (e.RowIndex < 0) return;
+
+            try
+            {
+                // 获取选中行的WitchID
+                var drv = _grid.Rows[e.RowIndex].DataBoundItem as System.Data.DataRowView;
+                if (drv == null || !drv.Row.Table.Columns.Contains("WitchID"))
+                {
+                    MessageBox.Show("无法获取魔女ID。");
+                    return;
+                }
+
+                int witchId = Convert.ToInt32(drv["WitchID"]);
+
+                // 打开详情窗口
+                using var detailForm = new WitchDetailForm(witchId);
+                detailForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开详情窗口失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         

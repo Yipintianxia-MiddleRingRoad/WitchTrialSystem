@@ -53,6 +53,9 @@ namespace WitchTrialSystem.UI
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             BackColor = Color.FromArgb(240, 240, 240);
+            
+            // 设置应用程序图标
+            BLL.IconHelper.SetFormIcon(this);
 
             // 标题
             _lblTitle = new Label

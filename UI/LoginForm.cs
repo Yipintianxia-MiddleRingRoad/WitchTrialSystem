@@ -85,6 +85,9 @@ namespace WitchTrialSystem.UI
             MaximizeBox = false;
             DoubleBuffered = true;
             KeyPreview = true;
+            
+            // 设置应用程序图标
+            BLL.IconHelper.SetFormIcon(this);
 
             // 加载背景图
             LoadBackground();

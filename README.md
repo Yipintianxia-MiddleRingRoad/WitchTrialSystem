@@ -1,22 +1,32 @@
 # 魔女审判资料管理系统
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
+[![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-Educational-green.svg)](LICENSE)
 
 数据库课程设计项目 - 基于 C# WinForms 和 SQL Server 的魔女审判管理系统
 
-**当前版本：V1.2.0** - 五子棋系统完善 + 对局日志 + 管理面板优化！
+**当前版本：V1.3.0** - 五子棋认输功能 + 项目文档优化 + 代码清理
 
 ## 项目简介
+基于 <魔法少女的魔女审判> 游戏的分级权限数据库管理系统》，核心是模拟游戏中 “国家 - 梅露露 - 典狱长 - 普通魔女” 的多层管理场景，开发一套集数据存储、权限控制、可视化交互于一体的完整系统
 
-这是一个魔女审判主题的资料管理系统，包含：
-- 用户登录与权限管理
-- 魔女图鉴系统（人物、证物、地图、规定、记录）
-- 手机界面（普通魔女用户）
-- 管理面板（管理员/典狱长/梅露露）- 全屏优化
-- **五子棋对弈系统** - 完整功能
-- **对局日志系统** - 记录与查询
+
+这是一个魔女审判主题的资料管理系统，基于游戏《魔法少女的魔女审判》世界观开发。系统包含：
+
+### 核心功能模块
+- **用户权限管理**：支持魔女、管理员、典狱长、梅露露四种角色
+- **魔女图鉴系统**：人物档案(1个岛屿两个批次)、证物收集、地图导航、规定查阅、历史记录
+- **手机界面模拟**：普通魔女用户的主要交互界面
+- **管理面板**：管理员专用的数据管理界面（全屏优化）
+- **五子棋对弈系统**：完整的棋类游戏功能
+  - 15×15标准棋盘
+  - 实时计时系统（步时60秒+局时10分钟）
+  - 悔棋、和棋、认输功能
+  - 积分排名系统
+- **对局日志系统**：完整的游戏记录与查询分析
+
+
 
 ## 环境要求
 
@@ -174,9 +184,11 @@ WitchTrialSystem/
   - 实时计时（步时60秒 + 局时10分钟，13ms精度）
   - 五子连珠自动判定
   - 积分系统（胜 +10，负 -5，和棋 0）
-  - 悔棋功能（魔法按钮）
-  - 和棋功能（伪证按钮）
+  - 悔棋功能（魔法按钮）- 时间回溯1步
+  - 和棋功能（伪证按钮）- 双方不分胜负
+  - 认输功能（疑问按钮）- 请求对手同意认输
   - 方正小标宋字体显示
+  - 美观的UI设计和流畅的动画效果
 
 ### 对局日志系统
 

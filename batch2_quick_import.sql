@@ -1,0 +1,66 @@
+USE WitchTrialWT;
+GO
+
+DECLARE @islandId INT = 1;
+DECLARE @batchId INT = 2;
+
+-- Import 13 witches for Batch 2
+INSERT INTO wt.Witch (Name, Magic, PrisonerNo, [Status], AvatarPath, IslandID, BatchID, DescriptionPublic)
+VALUES
+(N'小鸟游六花', N'邪王真眼', '671', N'Normal', 'Images/671.png', @islandId, @batchId, N'拥有的魔法是可以瞬间治疗伤痛的魔法。'),
+(N'富樫勇太', N'漆黑烈焰使', '672', N'Normal', 'Images/672.png', @islandId, @batchId, N'自称拥有''邪王真眼''的中二病少女，右眼用眼罩遮挡。能够看到别人看不见的''不可视境界线''，自信这是魔法天赋的表现。因父亲去世后，通过中二病设定来逃避现实，最终发现了真正的勇气。创建了''极东魔术昼寝结社''，聚集志同道合的''魔法少女''。看似疯癫的言行背后，隐藏着对魔法世界真挚的渴望。'),
+(N'丹生谷森夏', N'森夏魔女', '673', N'Normal', 'Images/673.png', @islandId, @batchId, N'曾经是中二病患者，现在理性而温暖。拥有平衡感官和理性的能力，成为中二少女们的精神寄托。虽然自己已经放弃了中二幻想，但能够理解这群少女的内心世界。逐渐发现，她们口中的''魔法''也许真的存在。决心保护这群拥有梦想的少女，陪伴她们寻找真正的魔法。'),
+(N'五月七日茴香', N'茴香魔女', '674', N'Normal', 'Images/674.png', @islandId, @batchId, N'热血而坚定的少女，相信''魔法''就是改变世界的力量。拥有火属性亲和力，虽然尚未觉醒真正的魔法能力。性格直爽，常常鼓励身边的人勇敢追梦。曾目睹一次奇异的魔法现象，从此开始探寻魔法的秘密。虽然能力尚浅，但那股热情足以点燃周围人的希望之光。'),
+(N'凸守早苗', N'雷之征服者', '675', N'Normal', 'Images/675.png', @islandId, @batchId, N'温柔而感性的少女，拥有敏锐的直觉与共感能力。能够感受到他人的情感波动，仿佛拥有读心的''魔法''。虽然没有明显的战斗型魔法，但她的安慰足以治愈创伤。常常在别人困顿时出现，用温暖驱散心中的黑暗。相信真正的魔法，就是与他人心灵的连接。'),
+(N'七宫智音', N'智音魔女', '676', N'Normal', 'Images/676.png', @islandId, @batchId, N'神秘而高冷的少女，拥有不可思议的预知能力。据说能够看到片刻的未来，因此总是显得超越常人的从容。话语不多，但每一句都精准地击中要点。行动充满目的性，仿佛已经计算好了一切因果。其真实身份与来历笼罩在迷雾中，等待被揭晓。'),
+(N'伊雷娜', N'灰之魔女', '677', N'Normal', 'Images/677.png', @islandId, @batchId, N'聪慧而冷静的少女，掌握着''数字魔法''的秘密。能够通过数学与逻辑的力量改变现实的运行规律。表面温和，但暗地里进行着复杂的计算与筹划。对魔法的理解更多是科学而非神秘。致力于验证：若魔法可以量化，那世界的本质是什么？'),
+(N'维多利加', N'高阶全属性魔法', '678', N'Normal', 'Images/678.png', @islandId, @batchId, N'身份神秘的成年魔女，自称''灰之魔女''。掌握高深的魔法知识，游历四方寻求有趣的事物。虽然强大，但更像是一位观察者而非战士。对少女们的成长充满兴趣，偶尔会给予神秘的建议。她的出现往往标志着故事的转折点与真相的逼近。'),
+(N'沙耶', N'扫帚魔女', '679', N'Normal', 'Images/679.png', @islandId, @batchId, N'优雅而神秘的女性，拥有古老魔法的继承者身份。精通复数领域的魔法，力量深不可测。虽然外表温柔，但眼中藏着沧桑与智慧。似乎知道许多不为人知的秘密。在群体中扮演引路人的角色，为迷茫的少女指引方向。'),
+(N'芙兰', N'星辰魔女', '680', N'Normal', 'Images/680.png', @islandId, @batchId, N'梦幻而神秘的少女，似乎来自不同的世界。拥有与植物和自然沟通的能力，宛如精灵般的存在。性格温和，但行为举止常常超越常人的理解。她的出现往往伴随着异常的自然现象。有人说她是魔法世界遗留在现实中的使者。'),
+(N'席拉', N'暗夜魔女', '681', N'Normal', 'Images/681.png', @islandId, @batchId, N'柔弱而坚韧的少女，拥有修复与重建的魔法。虽然身体羸弱，但意志坚不可摧。能够将破碎的事物恢复原状，包括人心的裂痕。曾经历过剧痛的创伤，却选择用柔软的心去拥抱世界。相信每一个生命都值得被修复与珍视。'),
+(N'琪琪', N'飞行魔法', '682', N'Normal', 'Images/682.png', @islandId, @batchId, N'神圣而威严的少女，拥有光属性的魔法。散发着圣洁的光辉，仿佛自带净化的力量。性格坚定，对正义有着绝对的执着。但在此信念下，也隐藏着她的脆弱与矛盾。她在寻找真正的光明，而非虚伪的圣洁。'),
+(N'冰上梅露露', N'治愈再生', '683', N'Normal', 'Images/683.png', @islandId, @batchId, N'独立而坚强的少女，拥有飞行与空间魔法。年纪最小，却拥有超越同龄人的成熟。虽然初来乍到，但那份热血与坚持迅速赢得了信任。来自遥远的地方，背负着某种使命。她的出现，标志着新时代的序幕正在拉开。');
+
+PRINT 'Batch 2: 13 witches imported';
+
+-- Update batch witch count
+UPDATE wt.Batch SET WitchCount = (SELECT COUNT(*) FROM wt.Witch WHERE BatchID = 2) WHERE BatchID = 2;
+
+-- Create user accounts
+DECLARE @roleWitch INT = (SELECT RoleID FROM wt.Role WHERE Name = N'Witch');
+
+INSERT INTO wt.[User] (Username, PasswordHash, Salt, RoleID, IslandID, BatchID, GomokuScore)
+VALUES
+('671', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('672', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('673', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('674', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('675', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('676', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('677', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('678', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('679', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('680', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('681', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('682', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0),
+('683', N'PENDING', N'PENDING', @roleWitch, @islandId, @batchId, 0);
+
+PRINT 'Batch 2: 13 user accounts created';
+
+-- Create user-witch associations
+INSERT INTO wt.UserWitch (UserID, WitchID)
+SELECT u.UserID, w.WitchID
+FROM wt.[User] u
+JOIN wt.Witch w ON u.Username = w.PrisonerNo
+WHERE u.BatchID = 2 AND w.BatchID = 2;
+
+PRINT 'Batch 2: User-Witch associations created';
+
+-- Verify
+SELECT 'Batch 2 Summary' AS Info;
+SELECT COUNT(*) AS WitchCount FROM wt.Witch WHERE BatchID = 2;
+SELECT COUNT(*) AS UserCount FROM wt.[User] WHERE BatchID = 2;
+SELECT COUNT(*) AS AssociationCount FROM wt.UserWitch uw JOIN wt.[User] u ON uw.UserID = u.UserID WHERE u.BatchID = 2;
+
+PRINT 'Batch 2 import completed!';
+GO
