@@ -49,6 +49,36 @@ namespace WitchTrialSystem.UI
             Cursor = Cursors.Hand
         };
         
+        private readonly Panel _btnExecution = new()  // 处刑按钮（魔女图鉴下方171像素）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnSettings = new()  // 设置按钮（魔女图鉴右边170像素）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnLive = new()  // 直播按钮（处刑右边170像素）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnRecord = new()  // 录音按钮（处刑下方）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
+        private readonly Panel _btnCamera = new()  // 照相按钮（右下角）
+        { 
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        
         #endregion
 
         #region 构造函数和初始化
@@ -142,12 +172,47 @@ namespace WitchTrialSystem.UI
             _btnExit.Top = 30;   // 状态栏区域
             _bg.Controls.Add(_btnExit);
 
+            // 处刑按钮（魔女图鉴下方171像素）
+            _btnExecution.Size = new Size(120, 140);  // 与魔女图鉴同样大小
+            _btnExecution.Left = 50;   // 与魔女图鉴同样位置
+            _btnExecution.Top = 120 + 171;  // 魔女图鉴下方171像素：120+171=291
+            _bg.Controls.Add(_btnExecution);
+
+            // 设置按钮（魔女图鉴右边170像素）
+            _btnSettings.Size = new Size(120, 140);  // 与魔女图鉴同样大小
+            _btnSettings.Left = 50 + 170;  // 魔女图鉴右边170像素：50+170=220
+            _btnSettings.Top = 120;   // 与魔女图鉴同样高度
+            _bg.Controls.Add(_btnSettings);
+
+            // 直播按钮（处刑右边170像素）
+            _btnLive.Size = new Size(120, 140);  // 与处刑同样大小
+            _btnLive.Left = 50 + 170;  // 处刑右边170像素：50+170=220
+            _btnLive.Top = 120 + 171;  // 与处刑同样高度：120+171=291
+            _bg.Controls.Add(_btnLive);
+
+            // 录音按钮（处刑下方）
+            _btnRecord.Size = new Size(120, 140);  // 与其他按钮同样大小
+            _btnRecord.Left = 50;   // 与处刑同样位置
+            _btnRecord.Top = 120 + 171 + 140 + 20;  // 处刑下方：291+140+20=451
+            _bg.Controls.Add(_btnRecord);
+
+            // 照相按钮（右下角）
+            _btnCamera.Size = new Size(120, 140);  // 与其他按钮同样大小
+            _btnCamera.Left = 50 + 170;  // 与直播按钮同样位置：220
+            _btnCamera.Top = 120 + 171 + 140 + 20;  // 与录音按钮同行：451
+            _bg.Controls.Add(_btnCamera);
+
             // 绑定点击事件
             _btnPokedex.Click += OnPokedexClick;
             _btnGomoku.Click += OnGomokuClick;
             _btnRanking.Click += OnRankingClick;
             _btnMatchLog.Click += OnMatchLogClick;
             _btnExit.Click += OnExitClick;
+            _btnExecution.Click += OnExecutionClick;
+            _btnSettings.Click += OnSettingsClick;
+            _btnLive.Click += OnLiveClick;
+            _btnRecord.Click += OnRecordClick;
+            _btnCamera.Click += OnCameraClick;
 
             // 确保按钮在最上层
             _btnPokedex.BringToFront();
@@ -155,6 +220,11 @@ namespace WitchTrialSystem.UI
             _btnRanking.BringToFront();
             _btnMatchLog.BringToFront();
             _btnExit.BringToFront();
+            _btnExecution.BringToFront();
+            _btnSettings.BringToFront();
+            _btnLive.BringToFront();
+            _btnRecord.BringToFront();
+            _btnCamera.BringToFront();
         }
         
         #endregion
@@ -269,6 +339,52 @@ ORDER BY u.GomokuScore DESC, u.Username ASC";
         private void OnExitClick(object? sender, EventArgs e)
         {
             DoLogout();
+        }
+
+        /// <summary>
+        /// 点击处刑按钮：跳转到处刑界面
+        /// </summary>
+        private void OnExecutionClick(object? sender, EventArgs e)
+        {
+            var executionForm = new ExecutionForm(_username);
+            executionForm.FormClosed += (s, args) => this.Show();  // 处刑窗口关闭时显示手机界面
+            this.Hide();
+            executionForm.Show();
+        }
+
+        /// <summary>
+        /// 点击设置按钮
+        /// </summary>
+        private void OnSettingsClick(object? sender, EventArgs e)
+        {
+            MessageBox.Show("设置功能开发中……", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
+        /// 点击直播按钮
+        /// </summary>
+        private void OnLiveClick(object? sender, EventArgs e)
+        {
+            MessageBox.Show("直播功能开发中……", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
+        /// 点击录音按钮
+        /// </summary>
+        private void OnRecordClick(object? sender, EventArgs e)
+        {
+            MessageBox.Show("录音功能开发中……", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
+        /// 点击照相按钮：打开照相对话框
+        /// </summary>
+        private void OnCameraClick(object? sender, EventArgs e)
+        {
+            var cameraForm = new CameraForm(_username);
+            cameraForm.FormClosed += (s, args) => this.Show();  // 相机窗口关闭时显示手机界面
+            this.Hide();
+            cameraForm.Show();
         }
 
         /// <summary>

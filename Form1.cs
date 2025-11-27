@@ -22,6 +22,7 @@ namespace WitchTrialSystem
         private readonly string _username;
         private readonly UserProfileDAL _profileDal = new();
         private readonly WitchDAL _dal = new();
+        private readonly PermissionDAL _permissionDal = new();
 
         private int _userId;
         private string _roleName = "";
@@ -244,7 +245,29 @@ namespace WitchTrialSystem
             _avatar.Image = null;
             try
             {
-                // 这里的 r 来自你上文的 DataRow：var r = dt.Rows[0];
+                // 为典狱长用户添加特殊的头像显示逻辑
+                string wardenAvatarPath = null;
+                if (_roleName == "Warden")
+                {
+                    // 根据用户名选择对应的典狱长头像
+                    if (_username == "warden")
+                    {
+                        wardenAvatarPath = Path.Combine(AppContext.BaseDirectory, "Images", "warden.jpg");
+                    }
+                    else if (_username == "warden2")
+                    {
+                        wardenAvatarPath = Path.Combine(AppContext.BaseDirectory, "Images", "warden2.png");
+                    }
+                    
+                    // 如果典狱长头像文件存在，直接使用
+                    if (!string.IsNullOrEmpty(wardenAvatarPath) && File.Exists(wardenAvatarPath))
+                    {
+                        _avatar.Image = Image.FromFile(wardenAvatarPath);
+                        return;
+                    }
+                }
+                
+                // 常规头像加载逻辑
                 object avatarObj = r["AvatarPath"];
                 string avatarPath = (avatarObj == null || avatarObj == DBNull.Value) ? null : avatarObj.ToString();
 
@@ -272,139 +295,248 @@ namespace WitchTrialSystem
             {
                 // 忽略图片加载异常
             }
-
-                    }
+        }
 
         /// <summary>
-        /// 加载岛屿列表
+        /// 加载岛屿列表（根据用户权限）
         /// </summary>
         private void LoadIslands()
         {
-            var dt = _dal.GetIslands();
+            var dt = _permissionDal.GetIslandsByPermission(_username);
             _cbIsland.DisplayMember="Name"; _cbIsland.ValueMember="IslandID"; _cbIsland.DataSource=dt;
         }
         
         /// <summary>
         /// 加载批次列表（根据选中的岛屿）
         /// </summary>
+        private DataTable CreateBatchTable()
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("BatchID", typeof(string));
+            dt.Columns.Add("DisplayText", typeof(string));
+            dt.Rows.Add("0", "全部");
+            return dt;
+        }
+
         private void LoadBatches()
         {
-            if (_cbIsland.SelectedValue is not int islandId) return;
-            var dt = _dal.GetBatches(islandId);
-            _cbBatch.DisplayMember="BatchID"; _cbBatch.ValueMember="BatchID"; _cbBatch.DataSource=dt;
+            try
+            {
+                if (_cbIsland.SelectedValue == null) return;
+                
+                int islandId;
+                // 处理可能的不同类型转换情况
+                if (_cbIsland.SelectedValue is int)
+                {
+                    islandId = (int)_cbIsland.SelectedValue;
+                }
+                else if (_cbIsland.SelectedValue is DataRowView rowView)
+                {
+                    islandId = Convert.ToInt32(rowView["IslandID"]);
+                }
+                else
+                {
+                    return;
+                }
+
+                // 创建包含"全部"选项的数据表
+                var dt = new DataTable();
+                dt.Columns.Add("BatchID", typeof(int));
+                dt.Columns.Add("DisplayText", typeof(string));
+                dt.Rows.Add(0, "全部");
+                
+                // 获取数据库中的批次数据
+                var batches = _dal.GetBatches(islandId);
+                
+                // 直接使用实际的BatchID
+                foreach (DataRow row in batches.Rows)
+                {
+                    int batchId = Convert.ToInt32(row["BatchID"]);
+                    dt.Rows.Add(batchId, batchId.ToString());
+                }
+                
+                // 更新数据源
+                _cbBatch.DisplayMember = "DisplayText";
+                _cbBatch.ValueMember = "BatchID";
+                _cbBatch.DataSource = dt;
+                
+                // 默认选中"全部"
+                if (_cbBatch.Items.Count > 0)
+                {
+                    _cbBatch.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                _status.Text = "加载批次失败: " + ex.Message;
+                _status.ForeColor = Color.Red;
+            }
         }
         
         /// <summary>
-        /// 加载魔女数据网格
+        /// 加载魔女数据网格（根据用户权限）
         /// </summary>
         private void LoadGrid()
         {
-            int? islandId = _cbIsland.SelectedValue as int?;
-            int? batchId  = _cbBatch.SelectedValue  as int?;
-            var nameLike  = string.IsNullOrWhiteSpace(_tbSearch.Text) ? null : _tbSearch.Text.Trim();
+            try
+            {
+                if (_cbIsland.SelectedValue == null) return;
+                
+                int islandId;
+                // 处理可能的不同类型转换情况
+                if (_cbIsland.SelectedValue is int)
+                {
+                    islandId = (int)_cbIsland.SelectedValue;
+                }
+                else if (_cbIsland.SelectedValue is DataRowView rowView)
+                {
+                    islandId = Convert.ToInt32(rowView["IslandID"]);
+                }
+                else
+                {
+                    return;
+                }
+            
+                // 处理批次筛选
+                int? batchId = null;
+                if (_cbBatch.SelectedValue != null && Convert.ToInt32(_cbBatch.SelectedValue) != 0)
+                {
+                    batchId = Convert.ToInt32(_cbBatch.SelectedValue);
+                }
+                
+                var nameLike = string.IsNullOrWhiteSpace(_tbSearch.Text) ? null : _tbSearch.Text.Trim();
 
-            var dt = _dal.GetWitches(islandId, batchId, nameLike);
-            _grid.DataSource = dt;
+                // 直接使用WitchDAL获取数据，不经过PermissionDAL的预筛选
+                DataTable allWitches;
+                if (_roleName == "Admin")
+                {
+                    // 管理员：直接获取所有数据
+                    allWitches = _dal.GetWitches(islandId, batchId, nameLike);
+                }
+                else if (_roleName == "Meruru" || _roleName == "Warden")
+                {
+                    // Meruru和Warden：获取指定岛屿的数据
+                    allWitches = _dal.GetWitches(islandId, batchId, nameLike);
+                }
+                else
+                {
+                    // 其他角色：通过PermissionDAL获取（已经预筛选）
+                    allWitches = _permissionDal.GetWitchesByPermission(_username, nameLike);
+                    
+                    // 如果还需要筛选批次，使用DataView
+                    if (batchId.HasValue)
+                    {
+                        var view = new DataView(allWitches);
+                        view.RowFilter = $"BatchID = {batchId.Value}";
+                        allWitches = view.ToTable();
+                    }
+                }
+                
+                // 应用数据
+                _grid.DataSource = allWitches;
+                
+                // 配置列显示
+                var dt = allWitches;
+                var cols = _grid.Columns;
+                int displayIndex = 0;
+                
+                // 显示记录数
+                _status.Text = $"共 {dt.Rows.Count} 条";
+                
+                // 核心识别信息
+                var c = cols["PrisonerNo"];    
+                if (c != null) { c.HeaderText = "囚人番号"; c.Width = 80; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["PersonalNo"];    
+                if (c != null) { c.HeaderText = "个人番号"; c.Width = 120; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Name"];          
+                if (c != null) { c.HeaderText = "姓名"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                // 基本信息
+                c = cols["Gender"];        
+                if (c != null) { c.HeaderText = "性别"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Age"];           
+                if (c != null) { c.HeaderText = "年龄"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Status"];        
+                if (c != null) { c.HeaderText = "状态"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                // 身体特征
+                c = cols["Height"];        
+                if (c != null) { c.HeaderText = "身高"; c.Width = 60; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Weight"];        
+                if (c != null) { c.HeaderText = "体重"; c.Width = 60; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["BloodType"];     
+                if (c != null) { c.HeaderText = "血型"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+                
+                // 能力信息
+                c = cols["Magic"];         
+                if (c != null) { c.HeaderText = "魔法"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                // 教育与背景
+                c = cols["HighestEducation"];
+                if (c != null) { c.HeaderText = "最高学历"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Birthplace"];    
+                if (c != null) { c.HeaderText = "籍贯"; c.Width = 80; c.DisplayIndex = displayIndex++; }
+                
+                // 联系方式
+                c = cols["Phone"];         
+                if (c != null) { c.HeaderText = "电话"; c.Width = 110; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Email"];         
+                if (c != null) { c.HeaderText = "邮箱"; c.Width = 180; c.DisplayIndex = displayIndex++; }
+                
+                // 个性特征
+                c = cols["Skills"];        
+                if (c != null) { c.HeaderText = "技能特长"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Hobbies"];       
+                if (c != null) { c.HeaderText = "兴趣爱好"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Dreams"];        
+                if (c != null) { c.HeaderText = "理想"; c.Width = 150; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["Trauma"];        
+                if (c != null) { c.HeaderText = "心理创伤"; c.Width = 200; c.DisplayIndex = displayIndex++; }
+                
+                // 系统字段
+                c = cols["IslandID"];      
+                if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["BatchID"];       
+                if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["WitchID"];   
+                if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = displayIndex++; }
+                
+                // 隐藏字段
+                c = cols["AvatarPath"];
+                if (c != null) { c.Visible = false; }
+                
+                c = cols["BirthDate"];
+                if (c != null) { c.Visible = false; } // 已经显示年龄，不需要显示出生日期
+                
+                // 描述列占满剩余空间
+                c = cols["DescriptionPublic"];
+                if (c != null) 
+                { 
+                    c.HeaderText = "公开描述"; 
+                    c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    c.DisplayIndex = displayIndex++;
+                }
 
-            // if (_grid.Columns.Contains("WitchID"))   _grid.Columns["WitchID"].HeaderText = "ID";
-            // if (_grid.Columns.Contains("Name"))      _grid.Columns["Name"].HeaderText = "姓名";
-            // if (_grid.Columns.Contains("Magic"))     _grid.Columns["Magic"].HeaderText = "魔法";
-            // if (_grid.Columns.Contains("PrisonerNo"))_grid.Columns["PrisonerNo"].HeaderText = "囚犯编号";
-            // if (_grid.Columns.Contains("Status"))    _grid.Columns["Status"].HeaderText = "状态";
-            // if (_grid.Columns.Contains("IslandID"))  _grid.Columns["IslandID"].HeaderText = "岛";
-            // if (_grid.Columns.Contains("BatchID"))   _grid.Columns["BatchID"].HeaderText = "批次";
-
-            var cols = _grid.Columns;
-            int displayIndex = 0;
-            
-            // 核心识别信息
-            var c = cols["PrisonerNo"];    
-            if (c != null) { c.HeaderText = "囚人番号"; c.Width = 80; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["PersonalNo"];    
-            if (c != null) { c.HeaderText = "个人番号"; c.Width = 120; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Name"];          
-            if (c != null) { c.HeaderText = "姓名"; c.Width = 100; c.DisplayIndex = displayIndex++; }
-            
-            // 基本信息
-            c = cols["Gender"];        
-            if (c != null) { c.HeaderText = "性别"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Age"];           
-            if (c != null) { c.HeaderText = "年龄"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Status"];        
-            if (c != null) { c.HeaderText = "状态"; c.Width = 100; c.DisplayIndex = displayIndex++; }
-            
-            // 身体特征
-            c = cols["Height"];        
-            if (c != null) { c.HeaderText = "身高"; c.Width = 60; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Weight"];        
-            if (c != null) { c.HeaderText = "体重"; c.Width = 60; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["BloodType"];     
-            if (c != null) { c.HeaderText = "血型"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-            
-            // 能力信息
-            c = cols["Magic"];         
-            if (c != null) { c.HeaderText = "魔法"; c.Width = 100; c.DisplayIndex = displayIndex++; }
-            
-            // 教育与背景
-            c = cols["HighestEducation"];
-            if (c != null) { c.HeaderText = "最高学历"; c.Width = 100; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Birthplace"];    
-            if (c != null) { c.HeaderText = "籍贯"; c.Width = 80; c.DisplayIndex = displayIndex++; }
-            
-            // 联系方式
-            c = cols["Phone"];         
-            if (c != null) { c.HeaderText = "电话"; c.Width = 110; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Email"];         
-            if (c != null) { c.HeaderText = "邮箱"; c.Width = 180; c.DisplayIndex = displayIndex++; }
-            
-            // 个性特征
-            c = cols["Skills"];        
-            if (c != null) { c.HeaderText = "技能特长"; c.Width = 150; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Hobbies"];       
-            if (c != null) { c.HeaderText = "兴趣爱好"; c.Width = 150; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Dreams"];        
-            if (c != null) { c.HeaderText = "理想"; c.Width = 150; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["Trauma"];        
-            if (c != null) { c.HeaderText = "心理创伤"; c.Width = 200; c.DisplayIndex = displayIndex++; }
-            
-            // 系统字段
-            c = cols["IslandID"];      
-            if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["BatchID"];       
-            if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-            
-            c = cols["WitchID"];   
-            if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-            
-            // 隐藏字段
-            c = cols["AvatarPath"];
-            if (c != null) { c.Visible = false; }
-            
-            c = cols["BirthDate"];
-            if (c != null) { c.Visible = false; } // 已经显示年龄，不需要显示出生日期
-            
-            // 描述列占满剩余空间
-            c = cols["DescriptionPublic"];
-            if (c != null) 
-            { 
-                c.HeaderText = "公开描述"; 
-                c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                c.DisplayIndex = displayIndex++;
+                _status.Text = $"共 {dt.Rows.Count} 条";
             }
-
-            _status.Text = $"共 {dt.Rows.Count} 条";
+            catch (Exception ex)
+            {
+                _status.Text = "加载魔女数据失败: " + ex.Message;
+                _status.ForeColor = Color.Red;
+            }
         }
         
         #endregion

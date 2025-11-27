@@ -21,6 +21,7 @@ namespace WitchTrialSystem.UI
         private readonly string _username;
         private readonly UserProfileDAL _profileDal = new();
         private readonly WitchDAL _dal = new();
+        private readonly PermissionDAL _permissionDal = new();
         private DataTable _dt = new();
         private int _current = 0;
         
@@ -380,11 +381,27 @@ namespace WitchTrialSystem.UI
                 int? islandId = userProfile.Rows.Count > 0 ? userProfile.Rows[0].Field<int?>("IslandID") : null;
                 int? batchId = userProfile.Rows.Count > 0 ? userProfile.Rows[0].Field<int?>("BatchID") : null;
 
-                // 加载本岛本批角色数据（按囚犯编号排序）
-                _dt = _dal.GetWitches(islandId, batchId, null);
-                var orderedData = _dt.AsEnumerable()
+                // 使用PermissionDAL获取有权限的魔女数据（确保权限正确）
+                var rawData = _permissionDal.GetWitchesByPermission(_username, null);
+                
+                // 如果是普通魔女角色，数据已经按权限筛选了
+                // 如果是管理员、Meruru、Warden，需要进一步按岛屿和批次筛选
+                if (islandId.HasValue)
+                {
+                    var view = new DataView(rawData);
+                    var filter = $"IslandID = {islandId.Value}";
+                    if (batchId.HasValue)
+                        filter += $" AND BatchID = {batchId.Value}";
+                    view.RowFilter = filter;
+                    rawData = view.ToTable();
+                }
+                
+                // 去重处理（按囚犯编号）
+                var distinctData = rawData.AsEnumerable()
+                    .GroupBy(row => Convert.ToString(row["PrisonerNo"]))
+                    .Select(group => group.First()) // 每个PrisonerNo只取第一条记录
                     .OrderBy(row => int.TryParse(Convert.ToString(row["PrisonerNo"]), out int no) ? no : 9999);
-                _dt = orderedData.CopyToDataTable();
+                _dt = distinctData.CopyToDataTable();
 
                 // 构建缩略图+默认显示第一个角色
                 BuildThumbnails();
