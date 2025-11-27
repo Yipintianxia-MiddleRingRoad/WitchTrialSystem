@@ -1,243 +1,47 @@
-# 魔女审判资料管理系统
+﻿# WitchTrialSystem
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem/releases)
-[![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/)
-[![License](https://img.shields.io/badge/license-Educational-green.svg)](LICENSE)
+魔女审判系统 - 双岛屿完整版
 
-数据库课程设计项目 - 基于 C# WinForms 和 SQL Server 的魔女审判管理系统
+## 最新版本: v1.4.0
 
-**当前版本：V1.3.0** - 五子棋认输功能 + 项目文档优化 + 代码清理
+### 功能特性
+- 双岛屿架构支持
+- 完整的魔女数据管理
+- 处刑系统
+- 权限管理系统
 
-## 项目简介
-基于 <魔法少女的魔女审判> 游戏的分级权限数据库管理系统》，核心是模拟游戏中 “国家 - 梅露露 - 典狱长 - 普通魔女” 的多层管理场景，开发一套集数据存储、权限控制、可视化交互于一体的完整系统
+## 版本历史
 
+### v1.4.0 (2025-11-27)
+- 新增双岛屿完整支持
+- 添加岛屿2批次4和批次5魔女数据（囚犯编号684-709）
+- 新增处刑界面(ExecutionForm)
+- 优化魔女图鉴显示
+- 改进数据导入脚本
 
-这是一个魔女审判主题的资料管理系统，基于游戏《魔法少女的魔女审判》世界观开发。系统包含：
-
-### 核心功能模块
-- **用户权限管理**：支持魔女、管理员、典狱长、梅露露四种角色
-- **魔女图鉴系统**：人物档案(1个岛屿两个批次)、证物收集、地图导航、规定查阅、历史记录
-- **手机界面模拟**：普通魔女用户的主要交互界面
-- **管理面板**：管理员专用的数据管理界面（全屏优化）
-- **五子棋对弈系统**：完整的棋类游戏功能
-  - 15×15标准棋盘
-  - 实时计时系统（步时60秒+局时10分钟）
-  - 悔棋、和棋、认输功能
-  - 积分排名系统
-- **对局日志系统**：完整的游戏记录与查询分析
-
-
-
-## 环境要求
-
-- .NET 8.0 或更高版本
-- SQL Server 2019 或更高版本（支持 LocalDB、Express、完整版）
-- Windows 操作系统
-
-## 安装步骤
-
-### 1. 克隆项目
-
-```bash
-git clone https://github.com/Yipintianxia-MiddleRingRoad/WitchTrialSystem.git
-cd WitchTrialSystem
-```
-
-### 2. 配置数据库连接
-
-1. 复制配置文件模板：
-   ```bash
-   copy appsettings.example.json appsettings.json
-   ```
-
-2. 编辑 `appsettings.json`，修改数据库连接字符串：
-
-   **方式一：Windows 身份验证（推荐）**
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=.;Database=WitchTrialWT;Trusted_Connection=True;TrustServerCertificate=True;"
-     }
-   }
-   ```
-
-   **方式二：SQL Server 身份验证**
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=.;Database=WitchTrialWT;User ID=sa;Password=你的密码;TrustServerCertificate=True;"
-     }
-   }
-   ```
-
-   **说明：**
-   - `Server=.` 表示本地默认实例
-   - 如果使用命名实例（如 SQLEXPRESS），改为 `Server=.\\SQLEXPRESS`
-   - 如果连接远程服务器，改为 `Server=服务器IP或名称`
-
-### 3. 创建数据库
-
-在 SQL Server Management Studio (SSMS) 中按顺序执行以下 SQL 脚本：
-
-1. 连接到你的 SQL Server 实例
-2. **依次执行以下三个 SQL 文件**：
-   - `database_init.sql` - 创建数据库、表结构和初始数据
-   - `add_gomoku_score_column.sql` - 添加五子棋积分字段
-   - `create_gomoku_match_log_table.sql` - 创建对局日志表
-3. 确保数据库名为 `WitchTrialWT`
-
-详细说明请查看 [数据库初始化说明.md](数据库初始化说明.md)
-
-### 4. 准备资源文件
-
-确保以下文件夹存在并包含必要的资源：
-
-```
-Images/
-  ├── ui/
-  │   ├── login_bg.png          # 登录界面背景
-  │   ├── phone_bg.png          # 手机界面背景
-  │   ├── pokedex_bg.png        # 图鉴背景
-  │   ├── evidence_bg.png       # 证物背景
-  │   ├── map_bg.png            # 地图背景
-  │   ├── rules_bg.png          # 规定背景
-  │   ├── records_bg.png        # 记录背景
-  │   ├── gomoku_mode_bg.png    # 五子棋模式选择背景（NEW）
-  │   └── gomoku_board_bg.png   # 五子棋棋盘背景（NEW）
-  ├── characters/               # 角色姓名图片
-  └── _placeholder.png          # 占位图
-
-Fonts/
-  └── 方正小标宋简.ttf          # 自定义字体
-```
-
-### 5. 运行项目
-
-```bash
-dotnet run
-```
-
-或在 Visual Studio 中按 F5 运行。
-
-## 默认账号
-
-系统会自动初始化默认密码为 `123456`，具体账号请查看数据库中的 `wt.[User]` 表。
+### v1.3.0 (2025-11-26)
+- 初始版本发布
 
 ## 项目结构
 
-```
+`
 WitchTrialSystem/
-├── BLL/                        # 业务逻辑层
-│   ├── Security.cs            # 密码加密验证
-│   └── UserBLL.cs             # 用户业务逻辑
-├── DAL/                        # 数据访问层
-│   ├── DBHelper.cs            # 数据库帮助类
-│   ├── UserDAL.cs             # 用户数据访问
-│   ├── UserProfileDAL.cs      # 用户档案数据访问
-│   ├── WitchDAL.cs            # 魔女数据访问
-│   ├── GomokuMatchLogDAL.cs   # 对局日志数据访问
-│   └── Models/                # 数据模型
-├── UI/                         # 用户界面层
-│   ├── LoginForm.cs           # 登录界面
-│   ├── PhoneForm.cs           # 手机界面
-│   ├── PokedexForm.cs         # 图鉴·人物
-│   ├── BasePokedexForm.cs     # 图鉴基类
-│   ├── EvidenceForm.cs        # 图鉴·证物
-│   ├── MapForm.cs             # 图鉴·地图
-│   ├── RulesForm.cs           # 图鉴·规定
-│   ├── RecordsForm.cs         # 图鉴·记录
-│   ├── GomokuModeForm.cs      # 五子棋模式选择
-│   ├── GomokuBoardForm.cs     # 五子棋棋盘
-│   └── GomokuMatchLogForm.cs  # 对局日志
-├── Images/                     # 图片资源
-├── Fonts/                      # 字体资源
-├── Form1.cs                   # 管理面板（全屏优化）
-├── Program.cs                 # 程序入口
-├── appsettings.json           # 配置文件（不上传到 Git）
-├── add_gomoku_score_column.sql           # 添加积分字段
-├── create_gomoku_match_log_table.sql     # 创建对局日志表
-└── 数据库命令整理后11_20.txt             # 完整数据库脚本
-```
+ DAL/               # 数据访问层
+ BLL/               # 业务逻辑层
+ UI/                # 用户界面
+ Images/            # 图片资源
+ Fonts/             # 字体文件
+ *.sql             # 数据库脚本
+`
 
-## 功能说明
+## 快速开始
 
-### 用户角色
+1. 克隆仓库
+2. 执行数据库脚本
+3. 配置连接字符串
+4. 运行项目
 
-- **Witch（魔女）**：普通用户，登录后进入手机界面，可查看图鉴
-- **Admin/Warden/Meruru**：管理员，登录后进入管理面板，可管理数据
-
-### 图鉴系统
-
-- **人物**：查看魔女信息（姓名、囚犯编号、魔法、描述）
-- **证物**：查看证物信息
-- **地图**：查看地图信息
-- **规定**：查看规定信息
-- **记录**：查看记录信息
-
-### 五子棋对弈系统
-
-- **入口**：手机界面底部左下角红色图标
-- **模式选择**：单设备对弈（本地双人）/ 多设备对弈（开发中）
-- **对手验证**：选择对手并输入密码验证
-- **核心功能**：
-  - 15x15 标准棋盘，黑子先手
-  - 实时计时（步时60秒 + 局时10分钟，13ms精度）
-  - 五子连珠自动判定
-  - 积分系统（胜 +10，负 -5，和棋 0）
-  - 悔棋功能（魔法按钮）- 时间回溯1步
-  - 和棋功能（伪证按钮）- 双方不分胜负
-  - 认输功能（疑问按钮）- 请求对手同意认输
-  - 方正小标宋字体显示
-  - 美观的UI设计和流畅的动画效果
-
-### 对局日志系统
-
-- **入口**：手机界面底部第三个按钮（放大镜图标）
-- **功能**：
-  - 查看所有对局记录
-  - 按玩家筛选（单个或两个玩家）
-  - 显示囚人番号、对局时间、结果、分数变化
-  - 2200x1300 大窗口，完整显示所有信息
-
-### 积分排行榜
-
-- **入口**：手机界面底部第二个按钮（箭头/消息框图标）
-- **功能**：显示所有魔女的五子棋积分排名（前13名）
-
-详细说明请查看 [五子棋功能说明.md](五子棋功能说明.md) 和 [五子棋测试指南.md](五子棋测试指南.md)
-
-### 导航
-
-- 图鉴页面右侧有导航按钮，可在五个页面间切换
-- 右上角退出按钮返回手机界面（魔女）或登录界面（管理员）
-- 五子棋界面支持 Esc 键快速返回
-
-## 常见问题
-
-### Q: 提示"未找到配置文件 appsettings.json"
-
-A: 请按照"安装步骤"第2步创建配置文件。
-
-### Q: 提示"SQL连接失败"
-
-A: 检查以下几点：
-1. SQL Server 服务是否启动
-2. 数据库名称是否正确（WitchTrialWT）
-3. 连接字符串中的服务器名是否正确
-4. 如果使用 SQL 登录，用户名密码是否正确
-
-### Q: 图片不显示
-
-A: 确保 `Images/` 文件夹中有对应的图片文件，并且路径正确。
-
-### Q: 字体显示异常
-
-A: 确保 `Fonts/方正小标宋简.ttf` 文件存在。
-
-## 开发团队
-
-- 数据库课程设计小组
-
-## 许可证
-
-本项目仅用于教学目的。
+## 注意事项
+- 更新前请备份数据库
+- 确保所有魔女头像已正确放置
+- 测试各角色权限是否正常
