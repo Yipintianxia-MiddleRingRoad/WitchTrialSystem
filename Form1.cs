@@ -137,8 +137,6 @@ namespace WitchTrialSystem
             right.Controls.Add(_lblUser);
             right.Controls.Add(_lblRole);
             right.Controls.Add(_lblCn);
-            right.Controls.Add(_lblNo);
-            right.Controls.Add(_lblMagic);
 
             // 按钮加入信息区（一定要在这里 Add）
             _btnChangePwd.Margin = new Padding(0, 6, 8, 0);
@@ -156,7 +154,7 @@ namespace WitchTrialSystem
             };
 
             // 左侧头像
-            _avatar.Width = 86; _avatar.Height = 86;
+            _avatar.Width = 250; _avatar.Height = 250;
             _avatar.SizeMode = PictureBoxSizeMode.Zoom;
             _avatar.BorderStyle = BorderStyle.FixedSingle;
 
@@ -216,26 +214,21 @@ namespace WitchTrialSystem
                 _lblUser.Text = $"账号：{_username}";
                 _lblRole.Text = $"角色：未知";
                 _lblCn.Text   = "中文名：—";
-                _lblNo.Text   = "囚犯编号：—";
-                _lblMagic.Text= "魔法：—";
                 return;
             }
 
             var r = dt.Rows[0];
             string role = r["RoleName"] as string ?? "Unknown";
             string cn   = r["CnName"]   as string ?? "—";
-            string no   = r["PrisonerNo"] as string ?? "—";
-            string mg   = r["Magic"]    as string ?? "—";
             string? avatar = r["AvatarPath"] as string;
+            
+            _userId   = Convert.ToInt32(r["UserID"]);
+            _roleName = Convert.ToString(r["RoleName"]) ?? "";
+            _canManage = _roleName == "Admin" || _roleName == "Warden" || _roleName == "Meruru";
 
             _lblUser.Text  = $"账号：{_username}";
             _lblRole.Text  = $"角色：{role}";
             _lblCn.Text    = $"中文名：{(cn ?? "—")}";
-            _lblNo.Text    = $"囚犯编号：{(no ?? "—")}";
-            _lblMagic.Text = $"魔法：{(mg ?? "—")}";
-            _userId   = Convert.ToInt32(r["UserID"]);
-            _roleName = Convert.ToString(r["RoleName"]) ?? "";
-            _canManage = _roleName == "Admin" || _roleName == "Warden" || _roleName == "Meruru";
 
             _btnAdd.Enabled    = _canManage;   // 只有管理员/典狱长/梅露露能新增
             _btnStatus.Enabled = _canManage;   // 同上：能改状态
@@ -245,28 +238,6 @@ namespace WitchTrialSystem
             _avatar.Image = null;
             try
             {
-                // 为典狱长用户添加特殊的头像显示逻辑
-                string wardenAvatarPath = null;
-                if (_roleName == "Warden")
-                {
-                    // 根据用户名选择对应的典狱长头像
-                    if (_username == "warden")
-                    {
-                        wardenAvatarPath = Path.Combine(AppContext.BaseDirectory, "Images", "warden.jpg");
-                    }
-                    else if (_username == "warden2")
-                    {
-                        wardenAvatarPath = Path.Combine(AppContext.BaseDirectory, "Images", "warden2.png");
-                    }
-                    
-                    // 如果典狱长头像文件存在，直接使用
-                    if (!string.IsNullOrEmpty(wardenAvatarPath) && File.Exists(wardenAvatarPath))
-                    {
-                        _avatar.Image = Image.FromFile(wardenAvatarPath);
-                        return;
-                    }
-                }
-                
                 // 常规头像加载逻辑
                 object avatarObj = r["AvatarPath"];
                 string avatarPath = (avatarObj == null || avatarObj == DBNull.Value) ? null : avatarObj.ToString();

@@ -17,7 +17,7 @@ SELECT
     w.Name       AS CnName,
     w.PrisonerNo,
     w.Magic,
-    w.AvatarPath,
+    ISNULL(u.AvatarPath, w.AvatarPath) AS AvatarPath,
     w.IslandID,
     w.BatchID,
     ISNULL(u.GomokuScore, 0) AS GomokuScore
