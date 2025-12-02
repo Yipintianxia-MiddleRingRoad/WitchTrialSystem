@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>1.4.1</Version>
+    <AssemblyVersion>1.4.1.0</AssemblyVersion>
+    <FileVersion>1.4.1.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Fonts\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.example.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude backup files from compilation -->
+    <Compile Remove="Form1_Backup.cs" />
+    <Compile Remove="Form1_Backup.Designer.cs" />
+    <EmbeddedResource Remove="Form1_Backup.resx" />
+    
+    <!-- Role-specific forms -->
+    <Compile Update="Form1_Admin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Form1_Regulator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Form1_Warden.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    
+    <!-- Embedded resources with explicit dependencies -->
+    <EmbeddedResource Update="Form1_Admin.resx">
+      <DependentUpon>Form1_Admin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Form1_Regulator.resx">
+      <DependentUpon>Form1_Regulator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Form1_Warden.resx">
+      <DependentUpon>Form1_Warden.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

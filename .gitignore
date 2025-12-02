@@ -1,0 +1,46 @@
+# Visual Studio 生成的文件
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+
+# 配置文件（包含个人数据库连接信息，不要上传）
+appsettings.json
+
+# 编译输出
+*.dll
+*.exe
+*.pdb
+
+# NuGet 包
+packages/
+*.nupkg
+
+# 用户特定文件
+*.csproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Windows 系统文件
+Thumbs.db
+Desktop.ini
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 数据库文件
+*.bak
+
+# 排除根目录的数据库文件，但允许 Data/ 文件夹中的数据库文件
+/*.mdf
+/*.ldf
+
+# Data/ 文件夹中的数据库文件会被提交（供队友直接使用）
+# !Data/*.mdf
+# !Data/*.ldf

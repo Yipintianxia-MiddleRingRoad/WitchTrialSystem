@@ -1,0 +1,667 @@
+using System;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using WitchTrialSystem.DAL;
+
+namespace WitchTrialSystem.UI
+{
+    public class PokedexForm : Form
+    {
+        private readonly string _username;
+        private readonly UserProfileDAL _profileDal = new();
+        private readonly WitchDAL _dal = new();
+
+        // 中文名到英文文件名的映射表
+        private static readonly Dictionary<string, string> NameMapping = new()
+        {
+            { "樱羽艾玛", "ema" },
+            { "二阶堂希罗", "hiro" },
+            { "夏目安安", "anan" },
+            { "城崎诺亚", "noah" },
+            { "莲见蕾娅", "leia" },
+            { "佐伯米莉亚", "meria" },
+            { "宝生玛格", "margo" },
+            { "黑部奈叶香", "nanoka" },
+            { "紫藤爱丽莎", "alisa" },
+            { "橘雪莉", "sherry" },
+            { "远野汉娜", "hanna" },
+            { "泽渡可可", "coco" },
+            { "冰上梅露露", "meruru" }
+        };
+
+        private readonly Panel _bg = new() { Dock = DockStyle.Fill, BackgroundImageLayout = ImageLayout.Stretch };
+
+        // 大头像与姓名调整（头像位置微调，姓名浮于左下角）
+        private readonly PictureBox _big = new() { SizeMode = PictureBoxSizeMode.Zoom, Width = 350, Height = 350, BackColor = Color.Transparent };
+        private readonly Label _nameL = new() { AutoSize = true, ForeColor = Color.White, BackColor = Color.Transparent };
+        private readonly TransparentPictureBox _namePic = new() { BackColor = Color.Transparent, Visible = false };
+
+        // 右侧：编号/魔法/公开描述（描述框的宽度缩小，并移动位置）
+        private readonly Label _lblNo = new() { AutoSize = true, BackColor = Color.Transparent };
+        private readonly Label _lblMagic = new() { AutoSize = true, BackColor = Color.Transparent };
+        private readonly Panel _descHost = new() { BackColor = Color.Transparent, AutoScroll = true };
+        private readonly Label _descLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(50, 50, 50), BackColor = Color.Transparent };
+
+        // 底部缩略图条
+        private readonly FlowLayoutPanel _thumbBar = new()
+        {
+            Dock = DockStyle.Bottom, Height = 140, // 增加缩略图条高度
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false, Padding = new Padding(40, 8, 40, 8), BackColor = Color.Transparent
+        };
+
+        // 右上角退出按钮
+        private readonly Panel _btnLogout = new();
+
+        private DataTable _dt = new();
+        private int _current = 0;
+
+        public PokedexForm(string username)
+        {
+            _username = username;
+            Text = "图鉴 · 人物";
+            StartPosition = FormStartPosition.CenterScreen;
+            Width = 1280; Height = 760;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            DoubleBuffered = true;
+
+            // 背景图
+            string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "pokedex_bg.png");
+            if (File.Exists(bgPath)) _bg.BackgroundImage = Image.FromFile(bgPath);
+            
+            // 确保背景面板支持透明控件
+            _bg.GetType().GetMethod("SetStyle", 
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.Invoke(_bg, new object[] { ControlStyles.SupportsTransparentBackColor, true });
+            
+            Controls.Add(_bg);
+
+            // 左侧：调整大头像位置，往下微调
+            _bg.Controls.Add(_big);
+            _big.Left = 120; _big.Top = 120; // 向下移动
+            _big.Size = new Size(350, 350);
+
+            // 姓名在左下角
+            _nameL.Font = new Font("Segoe UI", 28, FontStyle.Bold);
+            _nameL.BackColor = Color.FromArgb(140, 0, 0, 0);
+            _nameL.ForeColor = Color.White;
+            _nameL.Padding = new Padding(6, 2, 6, 2);
+            _bg.Controls.Add(_nameL);
+            _bg.Controls.Add(_namePic);
+            
+            // 设置 _namePic 的透明支持
+            _namePic.Parent = _bg;
+            
+            _nameL.Left = _big.Left;
+            _nameL.Top = _big.Top + _big.Height - _nameL.Height - 10;
+            _nameL.BringToFront(); // 确保姓名在最上层
+
+            // 创建 panelRight 用作右半部分容器
+            var panelRight = new Panel
+            {
+                Width = this.ClientSize.Width / 2, // 宽度为屏幕的一半
+                Height = 520, // 高度根据实际需要调整
+                BackColor = Color.Transparent
+            };
+            _bg.Controls.Add(panelRight);
+            panelRight.Left = this.ClientSize.Width / 2; // 将 panelRight 放在页面的右半部分
+            panelRight.Top = _big.Top; // 高度与左边的头像对齐
+
+            // 右侧的内容放进 panelRight
+            var title = new Label
+            {
+                Text = "Description", AutoSize = true,
+                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                ForeColor = Color.FromArgb(60, 60, 60), BackColor = Color.Transparent
+            };
+            panelRight.Controls.Add(title);
+            title.Left = 0; title.Top = 0;
+
+            // 囚犯编号与魔法：调整位置与间距
+            var lNo = new Label { Text = "囚犯编号：", AutoSize = true, BackColor = Color.Transparent };
+            panelRight.Controls.Add(lNo); lNo.Left = 0; lNo.Top = 48;
+            panelRight.Controls.Add(_lblNo); 
+            _lblNo.Left = lNo.Right + 6;  // 间隔6像素，可微调
+            _lblNo.Top = 48;
+            _lblNo.Width = panelRight.Width - _lblNo.Left - 20; // 留余量，可微调
+
+            var lMg = new Label { Text = "魔法：", AutoSize = true, BackColor = Color.Transparent };
+            panelRight.Controls.Add(lMg); lMg.Left = 0; lMg.Top = 76;
+            panelRight.Controls.Add(_lblMagic); _lblMagic.Left = 80; _lblMagic.Top = 76;
+
+            // 透明描述框
+            panelRight.Controls.Add(_descHost);
+            _descHost.Left = 0; _descHost.Top = 110;
+            _descHost.Width = panelRight.Width; _descHost.Height = panelRight.Height - 120;
+            _descHost.Controls.Add(_descLabel);
+
+            // 右侧描述部分宽度缩进九个汉字
+            int charWidth = TextRenderer.MeasureText("汉", _descLabel.Font).Width; // 获取单个汉字的宽度
+            _descLabel.MaximumSize = new Size(_descHost.ClientSize.Width - 10 - charWidth * 9, 0); // 减去九个汉字宽度
+
+            // 缩略图条调整位置
+            _bg.Controls.Add(_thumbBar);
+
+            // 退出按钮
+            var tips = new ToolTip();
+            _btnLogout.Size = new Size(42, 42); 
+            _btnLogout.BackColor = Color.Transparent;
+            _btnLogout.Cursor = Cursors.Hand;
+            _btnLogout.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            _btnLogout.Left = ClientSize.Width - 22 - _btnLogout.Width;
+            _btnLogout.Top = 18;
+            _btnLogout.Click += (_, __) => DoLogout();
+            tips.SetToolTip(_btnLogout, "退出登录");
+            _bg.Controls.Add(_btnLogout);
+
+            // Esc 键也可以退出
+            KeyPreview = true;
+            KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) DoLogout(); };
+
+            Load += OnLoad;
+        }
+
+        private void DoLogout()
+        {
+            var ok = MessageBox.Show("确定要退出登录吗？", "退出登录",
+                                     MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ok == DialogResult.Yes)
+            {
+                var login = new LoginForm();
+                login.Show();
+                this.Close();
+            }
+        }
+
+        private void OnLoad(object? s, EventArgs e)
+        {
+            try
+            {
+                // 1) 当前用户的岛/批
+                var prof = _profileDal.GetProfile(_username);
+                int? islandId = null, batchId = null;
+                if (prof.Rows.Count > 0)
+                {
+                    islandId = prof.Rows[0].Field<int?>("IslandID");
+                    batchId = prof.Rows[0].Field<int?>("BatchID");
+                }
+
+                // 2) 本岛本批 13 人（按囚犯编号排序）
+                _dt = _dal.GetWitches(islandId, batchId, null);
+                var ordered = _dt.AsEnumerable()
+                    .OrderBy(r => int.TryParse(Convert.ToString(r["PrisonerNo"]), out var n) ? n : 9999);
+                _dt = ordered.CopyToDataTable();
+
+                // 3) 画缩略图 & 默认显示第一位
+                BuildThumbnails();
+                if (_dt.Rows.Count > 0) ShowAt(0);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("加载图鉴失败：" + ex.Message);
+            }
+        }
+
+        private void BuildThumbnails()
+        {
+            _thumbBar.Controls.Clear();
+
+            int count = Math.Min(13, _dt.Rows.Count);
+            int slotW = Math.Max(72, (ClientSize.Width - 80) / 13 - 8);
+            int slotH = 72;
+
+            for (int i = 0; i < count; i++)
+            {
+                var r = _dt.Rows[i];
+                var pb = new PictureBox
+                {
+                    Width = slotW, Height = slotH,
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    Cursor = Cursors.Hand, Margin = new Padding(1, 14, 11, 6),
+                    BorderStyle = BorderStyle.None,
+                    BackColor = Color.Transparent,
+                    Tag = i
+                };
+
+                string? avatar = r["AvatarPath"] as string;
+                string? path = null;
+                if (!string.IsNullOrWhiteSpace(avatar))
+                    path = Path.IsPathRooted(avatar) ? avatar : Path.Combine(AppContext.BaseDirectory, avatar);
+                if (path != null && File.Exists(path)) pb.Image = Image.FromFile(path);
+                else
+                {
+                    string ph = Path.Combine(AppContext.BaseDirectory, "Images", "_placeholder.png");
+                    if (File.Exists(ph)) pb.Image = Image.FromFile(ph);
+                }
+
+                pb.Click += (_, __) => ShowAt((int)pb.Tag);
+                _thumbBar.Controls.Add(pb);
+            }
+
+            _thumbBar.BringToFront(); // 确保缩略图在顶层
+        }
+
+        private void ShowAt(int index)
+        {
+            if (index < 0 || index >= _dt.Rows.Count) return;
+            _current = index;
+            var r = _dt.Rows[_current];
+
+            // 大头像
+            _big.Image = null;
+            string? avatar = r["AvatarPath"] as string;
+            string? path = null;
+            if (!string.IsNullOrWhiteSpace(avatar))
+                path = Path.IsPathRooted(avatar) ? avatar : Path.Combine(AppContext.BaseDirectory, avatar);
+            if (path != null && File.Exists(path)) _big.Image = Image.FromFile(path);
+            else
+            {
+                string ph = Path.Combine(AppContext.BaseDirectory, "Images", "_placeholder.png");
+                if (File.Exists(ph)) _big.Image = Image.FromFile(ph);
+            }
+
+            // 姓名在头像左下角
+            string name = Convert.ToString(r["Name"]) ?? "";
+            _nameL.Text = name;
+            var sz = TextRenderer.MeasureText(_nameL.Text, _nameL.Font);
+            _nameL.Left = _big.Left;
+            _nameL.Top = _big.Top + _big.Height - sz.Height - 10;
+
+            // 检查是否有对应的名称图片，如果有则显示该图片
+            string imgFolder = Path.Combine(AppContext.BaseDirectory, "Images", "characters");
+            
+            // 优先使用数据库的英文名，其次使用映射表，最后直接用名字
+            string? englishName = r.Table.Columns.Contains("EnglishName") 
+                ? Convert.ToString(r["EnglishName"]) 
+                : null;
+            
+            string nameForFile;
+            if (!string.IsNullOrWhiteSpace(englishName))
+            {
+                nameForFile = englishName.ToLower();
+            }
+            else if (NameMapping.TryGetValue(name, out var mappedName))
+            {
+                nameForFile = mappedName.ToLower();
+            }
+            else
+            {
+                nameForFile = name.ToLower();
+            }
+            
+            string nameImgPath = Path.Combine(imgFolder, $"{nameForFile}.png");
+                
+                // 调试信息
+                Console.WriteLine($"角色名: {name}");
+                Console.WriteLine($"文件名: {nameForFile}");
+                Console.WriteLine($"完整路径: {nameImgPath}");
+                Console.WriteLine($"文件存在: {File.Exists(nameImgPath)}");
+                
+                // 如果文件存在，则显示图片
+                if (File.Exists(nameImgPath))
+                {
+                    try
+                    {
+                        // 释放旧图片资源
+                        if (_namePic.Image != null)
+                        {
+                            var oldImg = _namePic.Image;
+                            _namePic.Image = null;
+                            oldImg.Dispose();
+                        }
+
+                        // 使用最简单的方法加载PNG，保持透明度
+                        _namePic.Image = Image.FromFile(nameImgPath);
+
+                        _namePic.Visible = true;
+                        _namePic.BringToFront();
+                        _nameL.Visible = false;
+
+                        // 获取原始图片尺寸，保持比例
+                        var originalWidth = _namePic.Image.Width;
+                        var originalHeight = _namePic.Image.Height;
+                        
+                        // 设置目标宽度，按比例计算高度（保持图片不变形）
+                        int targetWidth = 360;  // 目标宽度
+                        int targetHeight = (int)(originalHeight * targetWidth / (double)originalWidth);
+                        
+                        _namePic.Width = targetWidth;
+                        _namePic.Height = targetHeight;
+                        
+                        // 位置微调：往右4像素，往下2像素
+                        _namePic.Left = _big.Left - 25 - 56 + 4;  // 往右4像素
+                        _namePic.Top = _big.Top + _big.Height - _namePic.Height + 5 + 28 + 2;  // 往下2像素
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"加载姓名图片失败: {ex.Message}");
+                        _namePic.Visible = false;
+                        _nameL.Visible = true;
+                    }
+                }
+                else
+                {
+                    // 如果没有图片，显示文字
+                    _namePic.Visible = false;
+                    _nameL.Visible = true;
+                }
+
+
+            // 右侧信息与透明描述
+            _lblNo.Text = Convert.ToString(r["PrisonerNo"]) ?? "—";
+            _lblMagic.Text = Convert.ToString(r["Magic"]) ?? "—";
+            _descLabel.Text = Convert.ToString(r["DescriptionPublic"]) ?? "";
+            _descLabel.MaximumSize = new Size(_descHost.ClientSize.Width - 10 - (TextRenderer.MeasureText("汉", _descLabel.Font).Width * 9), 0);
+        }
+    }
+
+    // 自定义透明 PictureBox，支持真正的透明PNG显示
+    public class TransparentPictureBox : Control
+    {
+        private Image? _image;
+        
+        [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public Image? Image
+        {
+            get => _image;
+            set
+            {
+                _image = value;
+                Invalidate();  // 重绘
+            }
+        }
+
+        public TransparentPictureBox()
+        {
+            SetStyle(ControlStyles.SupportsTransparentBackColor |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.UserPaint |
+                     ControlStyles.ResizeRedraw, true);
+            BackColor = Color.Transparent;
+            DoubleBuffered = true;
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            // 完全不绘制背景
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (_image != null)
+            {
+                // 设置高质量渲染，保持透明度
+                e.Graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+                e.Graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                
+                // 绘制图片
+                e.Graphics.DrawImage(_image, 0, 0, Width, Height);
+            }
+        }
+    }
+}
+
+
+
+// // 成功，双容器，但名字贴图还没做
+// using System;
+// using System.Data;
+// using System.Drawing;
+// using System.IO;
+// using System.Linq;
+// using System.Windows.Forms;
+// using WitchTrialSystem.DAL;
+
+// namespace WitchTrialSystem.UI
+// {
+//     public class PokedexForm : Form
+//     {
+//         private readonly string _username;
+//         private readonly UserProfileDAL _profileDal = new();
+//         private readonly WitchDAL _dal = new();
+
+//         private readonly Panel _bg = new() { Dock = DockStyle.Fill, BackgroundImageLayout = ImageLayout.Stretch };
+
+//         // 大头像与姓名调整（头像位置微调，姓名浮于左下角）
+//         private readonly PictureBox _big = new() { SizeMode = PictureBoxSizeMode.Zoom, Width = 350, Height = 350, BackColor = Color.Transparent };
+//         private readonly Label _nameL = new() { AutoSize = true, ForeColor = Color.White, BackColor = Color.Transparent };
+
+//         // 右侧：编号/魔法/公开描述（描述框的宽度缩小，并移动位置）
+//         private readonly Label _lblNo = new() { AutoSize = true, BackColor = Color.Transparent };
+//         private readonly Label _lblMagic = new() { AutoSize = true, BackColor = Color.Transparent };
+//         private readonly Panel _descHost = new() { BackColor = Color.Transparent, AutoScroll = true };
+//         private readonly Label _descLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(50, 50, 50), BackColor = Color.Transparent };
+
+//         // 底部缩略图条
+//         private readonly FlowLayoutPanel _thumbBar = new()
+//         {
+//             Dock = DockStyle.Bottom, Height = 140, // 增加缩略图条高度
+//             FlowDirection = FlowDirection.LeftToRight,
+//             WrapContents = false, Padding = new Padding(40, 8, 40, 8), BackColor = Color.Transparent
+//         };
+
+//         // 右上角退出按钮
+//         private readonly Panel _btnLogout = new();
+
+//         private DataTable _dt = new();
+//         private int _current = 0;
+
+//         public PokedexForm(string username)
+//         {
+//             _username = username;
+//             Text = "图鉴 · 人物";
+//             StartPosition = FormStartPosition.CenterScreen;
+//             Width = 1280; Height = 760;
+//             FormBorderStyle = FormBorderStyle.FixedSingle;
+//             MaximizeBox = false;
+//             DoubleBuffered = true;
+
+//             // 背景图
+//             string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "pokedex_bg.png");
+//             if (File.Exists(bgPath)) _bg.BackgroundImage = Image.FromFile(bgPath);
+//             Controls.Add(_bg);
+
+//             // 左侧：调整大头像位置，往下微调
+//             _bg.Controls.Add(_big);
+//             _big.Left = 120; _big.Top = 120; // 向下移动
+//             _big.Size = new Size(350, 350);
+
+//             // 姓名在左下角
+//             _nameL.Font = new Font("Segoe UI", 28, FontStyle.Bold);
+//             _nameL.BackColor = Color.FromArgb(140, 0, 0, 0);
+//             _nameL.ForeColor = Color.White;
+//             _nameL.Padding = new Padding(6, 2, 6, 2);
+//             _bg.Controls.Add(_nameL);
+//             _nameL.Left = _big.Left;
+//             _nameL.Top = _big.Top + _big.Height - _nameL.Height - 10;
+//             _nameL.BringToFront(); // 确保姓名在最上层
+
+//             // 创建 panelRight 用作右半部分容器
+//             var panelRight = new Panel
+//             {
+//                 Width = this.ClientSize.Width / 2, // 宽度为屏幕的一半
+//                 Height = 520, // 高度根据实际需要调整
+//                 BackColor = Color.Transparent
+//             };
+//             _bg.Controls.Add(panelRight);
+//             panelRight.Left = this.ClientSize.Width / 2; // 将 panelRight 放在页面的右半部分
+//             panelRight.Top = _big.Top; // 高度与左边的头像对齐
+
+//             // 右侧的内容放进 panelRight
+//             var title = new Label
+//             {
+//                 Text = "Description", AutoSize = true,
+//                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
+//                 ForeColor = Color.FromArgb(60, 60, 60), BackColor = Color.Transparent
+//             };
+//             panelRight.Controls.Add(title);
+//             title.Left = 0; title.Top = 0;
+
+//             // 囚犯编号与魔法：调整位置与间距
+//             var lNo = new Label { Text = "囚犯编号：", AutoSize = true, BackColor = Color.Transparent };
+//             panelRight.Controls.Add(lNo); lNo.Left = 0; lNo.Top = 48;
+//             panelRight.Controls.Add(_lblNo); 
+//             _lblNo.Left = lNo.Right + 6;  // 间隔6像素，可微调
+//             _lblNo.Top = 48;
+//             _lblNo.Width = panelRight.Width - _lblNo.Left - 20; // 留余量，可微调
+
+//             var lMg = new Label { Text = "魔法：", AutoSize = true, BackColor = Color.Transparent };
+//             panelRight.Controls.Add(lMg); lMg.Left = 0; lMg.Top = 76;
+//             panelRight.Controls.Add(_lblMagic); _lblMagic.Left = 80; _lblMagic.Top = 76;
+
+//             // 透明描述框
+//             panelRight.Controls.Add(_descHost);
+//             _descHost.Left = 0; _descHost.Top = 110;
+//             _descHost.Width = panelRight.Width; _descHost.Height = panelRight.Height - 120;
+//             _descHost.Controls.Add(_descLabel);
+
+//             // 右侧描述部分宽度缩进九个汉字
+//             int charWidth = TextRenderer.MeasureText("汉", _descLabel.Font).Width; // 获取单个汉字的宽度
+//             _descLabel.MaximumSize = new Size(_descHost.ClientSize.Width - 10 - charWidth * 9, 0); // 减去九个汉字宽度
+
+//             // 缩略图条调整位置
+//             _bg.Controls.Add(_thumbBar);
+
+//             // 退出按钮
+//             var tips = new ToolTip();
+//             _btnLogout.Size = new Size(42, 42); 
+//             _btnLogout.BackColor = Color.Transparent;
+//             _btnLogout.Cursor = Cursors.Hand;
+//             _btnLogout.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+//             _btnLogout.Left = ClientSize.Width - 22 - _btnLogout.Width;
+//             _btnLogout.Top = 18;
+//             _btnLogout.Click += (_, __) => DoLogout();
+//             tips.SetToolTip(_btnLogout, "退出登录");
+//             _bg.Controls.Add(_btnLogout);
+
+//             // Esc 键也可以退出
+//             KeyPreview = true;
+//             KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) DoLogout(); };
+
+//             Load += OnLoad;
+//         }
+
+//         private void DoLogout()
+//         {
+//             var ok = MessageBox.Show("确定要退出登录吗？", "退出登录",
+//                                      MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+//             if (ok == DialogResult.Yes)
+//             {
+//                 var login = new LoginForm();
+//                 login.Show();
+//                 this.Close();
+//             }
+//         }
+
+//         private void OnLoad(object? s, EventArgs e)
+//         {
+//             try
+//             {
+//                 // 1) 当前用户的岛/批
+//                 var prof = _profileDal.GetProfile(_username);
+//                 int? islandId = null, batchId = null;
+//                 if (prof.Rows.Count > 0)
+//                 {
+//                     islandId = prof.Rows[0].Field<int?>("IslandID");
+//                     batchId = prof.Rows[0].Field<int?>("BatchID");
+//                 }
+
+//                 // 2) 本岛本批 13 人（按囚犯编号排序）
+//                 _dt = _dal.GetWitches(islandId, batchId, null);
+//                 var ordered = _dt.AsEnumerable()
+//                     .OrderBy(r => int.TryParse(Convert.ToString(r["PrisonerNo"]), out var n) ? n : 9999);
+//                 _dt = ordered.CopyToDataTable();
+
+//                 // 3) 画缩略图 & 默认显示第一位
+//                 BuildThumbnails();
+//                 if (_dt.Rows.Count > 0) ShowAt(0);
+//             }
+//             catch (Exception ex)
+//             {
+//                 MessageBox.Show("加载图鉴失败：" + ex.Message);
+//             }
+//         }
+
+//          private void BuildThumbnails()
+//         {
+//             _thumbBar.Controls.Clear();
+
+//             int count = Math.Min(13, _dt.Rows.Count);
+//             int slotW = Math.Max(72, (ClientSize.Width - 80) / 13 - 8);
+//             int slotH = 72;
+
+//             for (int i = 0; i < count; i++)
+//             {
+//                 var r = _dt.Rows[i];
+//                 var pb = new PictureBox
+//                 {
+//                     Width = slotW, Height = slotH,
+//                     SizeMode = PictureBoxSizeMode.Zoom,
+//                     Cursor = Cursors.Hand, Margin = new Padding(1, 14, 11, 6),
+//                     BorderStyle = BorderStyle.None,
+//                     BackColor = Color.Transparent,
+//                     Tag = i
+//                 };
+
+//                 string? avatar = r["AvatarPath"] as string;
+//                 string? path = null;
+//                 if (!string.IsNullOrWhiteSpace(avatar))
+//                     path = Path.IsPathRooted(avatar) ? avatar : Path.Combine(AppContext.BaseDirectory, avatar);
+//                 if (path != null && File.Exists(path)) pb.Image = Image.FromFile(path);
+//                 else
+//                 {
+//                     string ph = Path.Combine(AppContext.BaseDirectory, "Images", "_placeholder.png");
+//                     if (File.Exists(ph)) pb.Image = Image.FromFile(ph);
+//                 }
+
+//                 pb.Click += (_, __) => ShowAt((int)pb.Tag);
+//                 _thumbBar.Controls.Add(pb);
+//             }
+
+//             _thumbBar.BringToFront(); // 确保缩略图在顶层
+//         }
+            
+//         private void ShowAt(int index)
+//         {
+//             if (index < 0 || index >= _dt.Rows.Count) return;
+//             _current = index;
+//             var r = _dt.Rows[_current];
+
+//             // 大头像
+//             _big.Image = null;
+//             string? avatar = r["AvatarPath"] as string;
+//             string? path = null;
+//             if (!string.IsNullOrWhiteSpace(avatar))
+//                 path = Path.IsPathRooted(avatar) ? avatar : Path.Combine(AppContext.BaseDirectory, avatar);
+//             if (path != null && File.Exists(path)) _big.Image = Image.FromFile(path);
+//             else
+//             {
+//                 string ph = Path.Combine(AppContext.BaseDirectory, "Images", "_placeholder.png");
+//                 if (File.Exists(ph)) _big.Image = Image.FromFile(ph);
+//             }
+
+//             // 姓名在头像左下角
+//             string name = Convert.ToString(r["Name"]) ?? "";
+//             _nameL.Text = name;
+//             var sz = TextRenderer.MeasureText(_nameL.Text, _nameL.Font);
+//             _nameL.Left = _big.Left;
+//             _nameL.Top = _big.Top + _big.Height - sz.Height - 10;
+
+//             // 右侧信息与透明描述
+//             _lblNo.Text = Convert.ToString(r["PrisonerNo"]) ?? "—";
+//             _lblMagic.Text = Convert.ToString(r["Magic"]) ?? "—";
+//             _descLabel.Text = Convert.ToString(r["DescriptionPublic"]) ?? "";
+//             _descLabel.MaximumSize = new Size(_descHost.ClientSize.Width - 10 - (TextRenderer.MeasureText("汉", _descLabel.Font).Width * 9), 0);
+//         }
+//     }
+// }
+
