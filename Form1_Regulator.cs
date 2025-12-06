@@ -50,6 +50,8 @@ namespace WitchTrialSystem
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
         private readonly Button _btnDashboard = new() { Text = "📊 智慧大屏", Width = 120, Height = 35 };
+        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 120, Height = 35 };
+        private readonly Button _btnMovementLog = new() { Text = "📋 移动记录", Width = 120, Height = 35 };
         
         #endregion
 
@@ -100,6 +102,8 @@ namespace WitchTrialSystem
         bar.Controls.Add(_tbSearch);
         bar.Controls.Add(_btnRefresh);
         bar.Controls.Add(_btnDashboard);
+        bar.Controls.Add(_btnPlatformMgmt);
+        bar.Controls.Add(_btnMovementLog);
         bar.Controls.Add(_status);
 
 
@@ -121,6 +125,8 @@ namespace WitchTrialSystem
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
             _btnDashboard.Click += (_, __) => OnOpenDashboard();
+            _btnPlatformMgmt.Click += (_, __) => OnOpenPlatformManagement();
+            _btnMovementLog.Click += (_, __) => OnOpenMovementLog();
             _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
 
             // 初始化右键菜单
@@ -600,6 +606,52 @@ namespace WitchTrialSystem
             catch (Exception ex)
             {
                 MessageBox.Show($"打开大屏失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 打开处刑台管理界面
+        /// </summary>
+        private void OnOpenPlatformManagement()
+        {
+            try
+            {
+                if (_currentIslandId == 0)
+                {
+                    MessageBox.Show("请先选择岛屿。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                using var form = new WitchTrialSystem.UI.ExecutionPlatformManagementForm(_username, _roleName, _currentIslandId);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开处刑台管理失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 打开移动记录查看界面
+        /// </summary>
+        private void OnOpenMovementLog()
+        {
+            try
+            {
+                if (_currentIslandId == 0)
+                {
+                    MessageBox.Show("请先选择岛屿。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                using var form = new WitchTrialSystem.UI.MovementLogViewForm(_username, _roleName, _currentIslandId);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开移动记录失败：{ex.Message}", "错误", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

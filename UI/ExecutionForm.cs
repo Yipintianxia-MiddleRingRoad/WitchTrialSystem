@@ -14,6 +14,9 @@ namespace WitchTrialSystem.UI
         #region 字段定义
         
         private readonly string _username;
+        private readonly int? _sessionId;  // 审判会话ID（可选）
+        private readonly int? _witchId;    // 魔女ID（可选）
+        private bool _hasConfirmed = false; // 是否已确认处刑
         
         // 背景容器
         private readonly Panel _bg = new() { Dock = DockStyle.Fill, BackgroundImageLayout = ImageLayout.Stretch };
@@ -37,12 +40,25 @@ namespace WitchTrialSystem.UI
         #region 构造函数和初始化
         
         /// <summary>
-        /// 构造函数：初始化处刑界面
+        /// 构造函数：初始化处刑界面（普通模式）
         /// </summary>
         /// <param name="username">当前登录的用户名</param>
-        public ExecutionForm(string username)
+        public ExecutionForm(string username) : this(username, null, null)
+        {
+        }
+        
+        /// <summary>
+        /// 构造函数：初始化处刑界面（审判模式）
+        /// </summary>
+        /// <param name="username">当前登录的用户名</param>
+        /// <param name="sessionId">审判会话ID</param>
+        /// <param name="witchId">魔女ID</param>
+        public ExecutionForm(string username, int? sessionId, int? witchId)
         {
             _username = username;
+            _sessionId = sessionId;
+            _witchId = witchId;
+            
             InitializeForm();
             LoadBackground();
             SetupButtons();
@@ -70,8 +86,16 @@ namespace WitchTrialSystem.UI
 
             Controls.Add(_bg);
             
-            // Esc 键返回手机界面
-            KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) ReturnToPhone(); };
+            // 审判模式下禁用关闭按钮
+            if (_sessionId.HasValue && _witchId.HasValue)
+            {
+                ControlBox = false;
+            }
+            else
+            {
+                // Esc 键返回手机界面（仅普通模式）
+                KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape) ReturnToPhone(); };
+            }
         }
 
         /// <summary>
@@ -152,8 +176,29 @@ namespace WitchTrialSystem.UI
                 // 异步等待1秒，不阻塞UI
                 await System.Threading.Tasks.Task.Delay(1000);
                 
-                // 显示成功消息
-                MessageBox.Show("处刑成功！", "处刑完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 如果是审判模式，更新确认状态
+                if (_sessionId.HasValue && _witchId.HasValue)
+                {
+                    var confirmResult = WitchTrialSystem.BLL.TrialVotingService.ConfirmExecution(_sessionId.Value, _witchId.Value);
+                    
+                    if (confirmResult.Success)
+                    {
+                        _hasConfirmed = true;
+                        MessageBox.Show("处刑确认成功！", "处刑完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        
+                        // 关闭窗口
+                        Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show($"确认失败：{confirmResult.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    // 普通模式
+                    MessageBox.Show("处刑成功！", "处刑完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             catch (Exception ex)
             {
@@ -186,6 +231,18 @@ namespace WitchTrialSystem.UI
         {
             // 直接关闭当前窗口，PhoneForm会自动显示
             this.Close();
+        }
+        
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // 审判模式下，未确认处刑不能关闭
+            if (_sessionId.HasValue && _witchId.HasValue && !_hasConfirmed && e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                MessageBox.Show("请先点击处刑按钮！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            
+            base.OnFormClosing(e);
         }
         
         #endregion

@@ -93,6 +93,7 @@ namespace WitchTrialSystem.UI
             InitializeForm();
             LoadBackground();
             SetupButtons();
+            CheckNotifications(); // 检查未读通知
         }
 
         /// <summary>
@@ -342,14 +343,181 @@ ORDER BY u.GomokuScore DESC, u.Username ASC";
         }
 
         /// <summary>
-        /// 点击处刑按钮：跳转到处刑界面
+        /// 点击处刑按钮：检查审判状态并跳转到对应界面
         /// </summary>
         private void OnExecutionClick(object? sender, EventArgs e)
         {
-            var executionForm = new ExecutionForm(_username);
-            executionForm.FormClosed += (s, args) => this.Show();  // 处刑窗口关闭时显示手机界面
-            this.Hide();
-            executionForm.Show();
+            try
+            {
+                // 获取当前用户信息
+                var userInfo = GetCurrentUserInfo();
+                
+                // 如果无法获取用户信息，直接进入普通处刑模式
+                if (userInfo == null)
+                {
+                    var executionForm = new ExecutionForm(_username);
+                    executionForm.FormClosed += (s, args) => this.Show();
+                    this.Hide();
+                    executionForm.Show();
+                    return;
+                }
+                
+                // 检查当前审判状态
+                var state = WitchTrialSystem.BLL.TrialSessionService.GetCurrentState(userInfo.Value.UserID, userInfo.Value.IslandID);
+                
+                // 调试：显示当前状态
+                MessageBox.Show($"调试信息：\nUserID: {userInfo.Value.UserID}\nIslandID: {userInfo.Value.IslandID}\nWitchID: {userInfo.Value.WitchID}\n当前状态: {state}", "调试", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                switch (state)
+                {
+                    case WitchTrialSystem.Models.TrialState.Idle:
+                        // 无审判进行中，进入普通处刑模式
+                        var executionForm1 = new ExecutionForm(_username);
+                        executionForm1.FormClosed += (s, args) => this.Show();
+                        this.Hide();
+                        executionForm1.Show();
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.NotParticipating:
+                        // 不是参与者，进入普通处刑模式
+                        var executionForm2 = new ExecutionForm(_username);
+                        executionForm2.FormClosed += (s, args) => this.Show();
+                        this.Hide();
+                        executionForm2.Show();
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.WaitingToStart:
+                        MessageBox.Show("审判已创建，等待典狱长开始投票...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.Voting:
+                        // 跳转到投票界面
+                        ShowVotingForm(userInfo.Value);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.WaitingForOthersToVote:
+                        MessageBox.Show("您已投票，等待其他人投票...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.WaitingForExecutionAnnouncement:
+                        MessageBox.Show("投票已完成，等待典狱长宣布处刑对象...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.ConfirmingExecution:
+                        // 跳转到处刑对象确认界面
+                        ShowExecutionConfirmForm(userInfo.Value);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.WaitingForOthersToConfirm:
+                        MessageBox.Show("您已确认处刑，等待其他人确认...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    
+                    case WitchTrialSystem.Models.TrialState.Completed:
+                        MessageBox.Show("审判已完成。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    
+                    default:
+                        // 普通处刑模式
+                        var executionForm3 = new ExecutionForm(_username);
+                        executionForm3.FormClosed += (s, args) => this.Show();
+                        this.Hide();
+                        executionForm3.Show();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"检查审判状态失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                // 出错时也允许进入普通处刑模式
+                var executionForm = new ExecutionForm(_username);
+                executionForm.FormClosed += (s, args) => this.Show();
+                this.Hide();
+                executionForm.Show();
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前用户信息
+        /// </summary>
+        private (int UserID, int IslandID, int WitchID)? GetCurrentUserInfo()
+        {
+            try
+            {
+                const string sql = @"
+SELECT u.UserID, u.IslandID, uw.WitchID
+FROM wt.[User] u
+LEFT JOIN wt.UserWitch uw ON uw.UserID = u.UserID
+WHERE u.Username = @Username";
+
+                var dt = WitchTrialSystem.DAL.DBHelper.ExecDataTable(sql,
+                    new Microsoft.Data.SqlClient.SqlParameter("@Username", _username));
+                
+                if (dt.Rows.Count > 0)
+                {
+                    int userId = Convert.ToInt32(dt.Rows[0]["UserID"]);
+                    int islandId = dt.Rows[0]["IslandID"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["IslandID"]);
+                    int witchId = dt.Rows[0]["WitchID"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["WitchID"]);
+                    
+                    return (userId, islandId, witchId);
+                }
+                
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// 显示投票界面
+        /// </summary>
+        private void ShowVotingForm((int UserID, int IslandID, int WitchID) userInfo)
+        {
+            try
+            {
+                var session = WitchTrialSystem.BLL.TrialSessionService.GetActiveSession(userInfo.IslandID);
+                if (session == null)
+                {
+                    MessageBox.Show("未找到进行中的审判。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                
+                var votingForm = new TrialVotingForm(session.SessionID, userInfo.UserID, userInfo.WitchID);
+                votingForm.FormClosed += (s, args) => this.Show();
+                this.Hide();
+                votingForm.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开投票界面失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 显示处刑对象确认界面
+        /// </summary>
+        private void ShowExecutionConfirmForm((int UserID, int IslandID, int WitchID) userInfo)
+        {
+            try
+            {
+                var session = WitchTrialSystem.BLL.TrialSessionService.GetActiveSession(userInfo.IslandID);
+                if (session == null)
+                {
+                    MessageBox.Show("未找到进行中的审判。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                
+                var confirmForm = new TrialExecutionConfirmForm(session.SessionID, userInfo.UserID, userInfo.WitchID, _username);
+                confirmForm.FormClosed += (s, args) => this.Show();
+                this.Hide();
+                confirmForm.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开确认界面失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -415,6 +583,39 @@ ORDER BY u.GomokuScore DESC, u.Username ASC";
                 e.Cancel = true; // 取消关闭
                 DoLogout(); // 执行退出登录逻辑
             }
+        }
+        
+        /// <summary>
+        /// 检查未读通知
+        /// </summary>
+        private void CheckNotifications()
+        {
+            try
+            {
+                var userInfo = GetCurrentUserInfo();
+                if (userInfo == null) return;
+                
+                var notifications = WitchTrialSystem.BLL.TrialNotificationService.GetUnreadNotifications(userInfo.Value.UserID);
+                
+                foreach (var notification in notifications)
+                {
+                    ShowNotificationPopup(notification);
+                    WitchTrialSystem.BLL.TrialNotificationService.MarkAsRead(notification.NotificationID);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"检查通知失败：{ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 显示通知弹窗
+        /// </summary>
+        private void ShowNotificationPopup(WitchTrialSystem.Models.TrialNotificationModel notification)
+        {
+            var popup = new NotificationPopupForm(notification);
+            popup.Show();
         }
         
         #endregion

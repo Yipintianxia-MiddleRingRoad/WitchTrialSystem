@@ -48,6 +48,9 @@ namespace WitchTrialSystem
         // 用户操作按钮
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
+        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 120, Height = 35 };
+        private readonly Button _btnMovementLog = new() { Text = "📋 移动记录", Width = 120, Height = 35 };
+        private readonly Button _btnTrialMgmt = new() { Text = "⚖️ 审判管理", Width = 120, Height = 35 };
         
         #endregion
 
@@ -97,6 +100,9 @@ namespace WitchTrialSystem
         bar.Controls.Add(_cbBatch);
         bar.Controls.Add(_tbSearch);
         bar.Controls.Add(_btnRefresh);
+        bar.Controls.Add(_btnPlatformMgmt);
+        bar.Controls.Add(_btnMovementLog);
+        bar.Controls.Add(_btnTrialMgmt);
         bar.Controls.Add(_status);
 
 
@@ -117,6 +123,9 @@ namespace WitchTrialSystem
             _cbBatch.SelectedIndexChanged  += (_,__) => { LoadGrid(); };
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
+            _btnPlatformMgmt.Click += (_, __) => OnOpenPlatformManagement();
+            _btnMovementLog.Click += (_, __) => OnOpenMovementLog();
+            _btnTrialMgmt.Click += (_, __) => OnOpenTrialManagement();
             _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
 
         }
@@ -577,6 +586,90 @@ namespace WitchTrialSystem
             }
         }
 
+        /// <summary>
+        /// 打开处刑台管理界面
+        /// </summary>
+        private void OnOpenPlatformManagement()
+        {
+            try
+            {
+                // 获取当前选中的岛屿ID
+                int currentIslandId = _cbIsland.SelectedValue != null
+                    ? Convert.ToInt32(_cbIsland.SelectedValue)
+                    : 0;
+                
+                if (currentIslandId == 0)
+                {
+                    MessageBox.Show("请先选择岛屿。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                using var form = new WitchTrialSystem.UI.ExecutionPlatformManagementForm(_username, _roleName, currentIslandId);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开处刑台管理失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 打开移动记录查看界面
+        /// </summary>
+        private void OnOpenMovementLog()
+        {
+            try
+            {
+                // 获取当前选中的岛屿ID
+                int currentIslandId = _cbIsland.SelectedValue != null
+                    ? Convert.ToInt32(_cbIsland.SelectedValue)
+                    : 0;
+                
+                if (currentIslandId == 0)
+                {
+                    MessageBox.Show("请先选择岛屿。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                using var form = new WitchTrialSystem.UI.MovementLogViewForm(_username, _roleName, currentIslandId);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开移动记录失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 打开审判管理界面
+        /// </summary>
+        private void OnOpenTrialManagement()
+        {
+            try
+            {
+                // 获取当前选中的岛屿ID
+                int currentIslandId = _cbIsland.SelectedValue != null
+                    ? Convert.ToInt32(_cbIsland.SelectedValue)
+                    : 0;
+                
+                if (currentIslandId == 0)
+                {
+                    MessageBox.Show("请先选择岛屿。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                
+                using var form = new WitchTrialSystem.UI.TrialManagementForm(_username, _userId, currentIslandId);
+                form.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开审判管理失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
         /// <summary>
         /// 双击单元格查看魔女详情
         /// </summary>
