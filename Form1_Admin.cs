@@ -43,7 +43,9 @@ namespace WitchTrialSystem
         private readonly TextBox  _tbSearch = new() { PlaceholderText = "按名字搜索", Width = 220, Height = 35 };
         private readonly Button   _btnRefresh = new() { Text = "刷新", Width = 80, Height = 35 };
         private readonly Button   _btnAdd     = new() { Text = "新增魔女", Width = 100, Height = 35 };
+        private readonly Button   _btnDelete  = new() { Text = "删除魔女", Width = 100, Height = 35 };
         private readonly Button   _btnAddCountry = new() { Text = "国家层添加", Width = 110, Height = 35 };
+        private readonly Button   _btnDashboard = new() { Text = "📊 智慧大屏", Width = 120, Height = 35 };
         private readonly Label    _status     = new() { AutoSize = true, ForeColor = Color.DimGray, Padding = new Padding(8,2,8,2) };
         private readonly DataGridView _grid   = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false };
 
@@ -101,6 +103,8 @@ namespace WitchTrialSystem
         bar.Controls.Add(_tbSearch);
         bar.Controls.Add(_btnRefresh);
         bar.Controls.Add(_btnAddCountry);
+        bar.Controls.Add(_btnDelete);
+        bar.Controls.Add(_btnDashboard);
         bar.Controls.Add(_status);
 
 
@@ -120,6 +124,8 @@ namespace WitchTrialSystem
             _cbIsland.SelectedIndexChanged += (_,__) => { LoadBatches(); LoadGrid(); };
             _cbBatch.SelectedIndexChanged  += (_,__) => { LoadGrid(); };
             _btnAddCountry.Click += (_,__) => OnAddWitchCountry();
+            _btnDelete.Click += (_,__) => OnDeleteWitch();
+            _btnDashboard.Click += (_,__) => OnOpenDashboard();
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
             _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
@@ -448,8 +454,21 @@ namespace WitchTrialSystem
                 // 显示记录数
                 _status.Text = $"共 {dt.Rows.Count} 条";
                 
+                // 岛屿信息（放在最前面）
+                var c = cols["IslandID"];      
+                if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["IslandName"];    
+                if (c != null) { c.HeaderText = "岛屿名称"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["BatchID"];       
+                if (c != null) { c.HeaderText = "全局批次"; c.Width = 70; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["LocalBatchID"];  
+                if (c != null) { c.HeaderText = "本岛批次"; c.Width = 70; c.DisplayIndex = displayIndex++; }
+                
                 // 核心识别信息
-                var c = cols["PrisonerNo"];    
+                c = cols["PrisonerNo"];    
                 if (c != null) { c.HeaderText = "囚人番号"; c.Width = 80; c.DisplayIndex = displayIndex++; }
                 
                 c = cols["PersonalNo"];    
@@ -510,12 +529,6 @@ namespace WitchTrialSystem
                 if (c != null) { c.HeaderText = "心理创伤"; c.Width = 200; c.DisplayIndex = displayIndex++; }
                 
                 // 系统字段
-                c = cols["IslandID"];      
-                if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
-                
-                c = cols["BatchID"];       
-                if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-                
                 c = cols["WitchID"];   
                 if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = displayIndex++; }
                 
@@ -562,6 +575,97 @@ namespace WitchTrialSystem
                     // 保存成功，刷新数据网格
                     LoadGrid();
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 打开智慧可视化大屏
+        /// </summary>
+        private void OnOpenDashboard()
+        {
+            try
+            {
+                var dashboard = new WitchTrialSystem.UI.DashboardForm(_username, _roleName, null);
+                dashboard.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开大屏失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 删除魔女（仅限状态为"待分配"的魔女，仅国家端管理员可操作）
+        /// </summary>
+        private void OnDeleteWitch()
+        {
+            if (_grid.CurrentRow == null)
+            {
+                MessageBox.Show("请先选中一条记录。", "提示", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 获取选中行信息
+            var drv = _grid.CurrentRow.DataBoundItem as System.Data.DataRowView;
+            if (drv == null || !drv.Row.Table.Columns.Contains("WitchID"))
+            {
+                MessageBox.Show("无法获取选中行的魔女信息。", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int witchId = Convert.ToInt32(drv["WitchID"]);
+            string name = Convert.ToString(drv["Name"]) ?? $"#{witchId}";
+            string prisonerNo = Convert.ToString(drv["PrisonerNo"]) ?? "未知";
+            string status = Convert.ToString(drv["Status"]) ?? "";
+
+            // 检查状态是否为"待分配"
+            if (status != "待分配")
+            {
+                MessageBox.Show($"只能删除状态为\"待分配\"的魔女。\n\n当前魔女状态：{status}\n\n请先将魔女状态改为\"待分配\"后再删除。", 
+                    "无法删除", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 二次确认
+            var result = MessageBox.Show(
+                $"确定要删除以下魔女吗？\n\n姓名：{name}\n囚人番号：{prisonerNo}\n状态：{status}\n\n此操作不可撤销！", 
+                "确认删除", 
+                MessageBoxButtons.YesNo, 
+                MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                bool success = _dal.DeleteWitch(witchId);
+                
+                if (success)
+                {
+                    // 记录审计日志
+                    AuditDAL.Log(_userId, _username, "DeleteWitch",
+                        $"Witch:{witchId}", $"Deleted witch: {name} (PrisonerNo: {prisonerNo})");
+                    
+                    MessageBox.Show($"魔女\"{name}\"已成功删除。", "删除成功", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    
+                    LoadGrid();
+                }
+                else
+                {
+                    MessageBox.Show("删除失败，请重试。", "删除失败", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         
@@ -679,6 +783,7 @@ namespace WitchTrialSystem
 
             int witchId = Convert.ToInt32(drv["WitchID"]);
             string witchName = Convert.ToString(drv["Name"]) ?? "未知";
+            string status = Convert.ToString(drv["Status"]) ?? "";
 
             // 创建右键菜单
             var contextMenu = new ContextMenuStrip();
@@ -687,6 +792,17 @@ namespace WitchTrialSystem
             var editMenuItem = new ToolStripMenuItem($"编辑魔女信息 - {witchName}");
             editMenuItem.Click += (s, args) => OnEditWitchInfo(witchId);
             contextMenu.Items.Add(editMenuItem);
+            
+            // Admin 可以删除状态为"待分配"的魔女
+            var deleteMenuItem = new ToolStripMenuItem($"删除魔女 - {witchName}");
+            deleteMenuItem.Click += (s, args) => OnDeleteWitch();
+            // 只有状态为"待分配"时才启用删除选项
+            deleteMenuItem.Enabled = (status == "待分配");
+            if (status != "待分配")
+            {
+                deleteMenuItem.ToolTipText = "只能删除状态为\"待分配\"的魔女";
+            }
+            contextMenu.Items.Add(deleteMenuItem);
             
             // 显示菜单
             contextMenu.Show(_grid, _grid.PointToClient(Cursor.Position));

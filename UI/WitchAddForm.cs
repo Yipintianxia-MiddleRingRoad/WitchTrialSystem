@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using WitchTrialSystem.DAL;
 using WitchTrialSystem.Models;
 using Newtonsoft.Json;
+using Microsoft.Data.SqlClient;
 
 namespace WitchTrialSystem.UI
 {
@@ -183,8 +184,8 @@ namespace WitchTrialSystem.UI
             tab.Controls.Add(lblName);
             tab.Controls.Add(txtName);
             
-            // 囚犯编号
-            Label lblPrisonerNo = new Label { Text = "囚犯编号:", Location = new Point(400, y), Width = labelWidth };
+            // 囚犯编号（必填）
+            Label lblPrisonerNo = new Label { Text = "囚犯编号*:", Location = new Point(400, y), Width = labelWidth };
             txtPrisonerNo = new TextBox { Location = new Point(510, y), Width = controlWidth };
             tab.Controls.Add(lblPrisonerNo);
             tab.Controls.Add(txtPrisonerNo);
@@ -583,23 +584,14 @@ namespace WitchTrialSystem.UI
             
             y += spacing;
             
-            // 头像路径
-            Label lblAvatarPath = new Label { Text = "头像路径:", Location = new Point(20, y), Width = labelWidth };
-            txtAvatarPath = new TextBox { Location = new Point(130, y), Width = 400 };
-            tab.Controls.Add(lblAvatarPath);
-            tab.Controls.Add(txtAvatarPath);
-            
-            btnBrowseAvatar = new Button { Text = "浏览...", Location = new Point(540, y - 2), Size = new Size(80, 25) };
-            btnBrowseAvatar.Click += BtnBrowseAvatar_Click;
-            tab.Controls.Add(btnBrowseAvatar);
-            
-            y += spacing + 10;
-            
             // 说明文字
             Label lblNote = new Label();
-            lblNote.Text = "注意：如果不选择岛屿和批次，魔女将被标记为\"待分配\"状态，\n不会创建用户账号。";
+            lblNote.Text = "注意：\n" +
+                          "1. 如果不选择岛屿和批次，魔女将被标记为\"待分配\"状态，不会创建用户账号。\n" +
+                          "2. 头像图片请放在 Images\\{囚犯编号}.png\n" +
+                          "3. 姓名图片请放在 Images\\characters\\{囚犯编号}.png";
             lblNote.Location = new Point(20, y);
-            lblNote.Size = new Size(600, 40);
+            lblNote.Size = new Size(700, 60);
             lblNote.ForeColor = Color.DarkOrange;
             tab.Controls.Add(lblNote);
         }
@@ -791,11 +783,31 @@ namespace WitchTrialSystem.UI
             
             if (islandId > 0)
             {
-                // 根据岛屿加载批次
-                var batches = WitchDAL.GetBatchesByIsland(islandId);
-                foreach (var batch in batches)
+                try
                 {
-                    cmbBatch.Items.Add($"批次{batch}");
+                    // 添加空选项
+                    cmbBatch.Items.Add("");
+                    
+                    // 根据岛屿加载批次（使用本地批次号）
+                    var batches = GetLocalBatchesByIsland(islandId);
+                    
+                    // 调试信息
+                    System.Diagnostics.Debug.WriteLine($"岛屿{islandId}的批次列表：{string.Join(", ", batches)}");
+                    
+                    foreach (var localBatchId in batches)
+                    {
+                        cmbBatch.Items.Add($"批次{localBatchId}");
+                    }
+                    
+                    // 默认选择空选项
+                    if (cmbBatch.Items.Count > 0)
+                    {
+                        cmbBatch.SelectedIndex = 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"加载批次失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -812,21 +824,26 @@ namespace WitchTrialSystem.UI
             // 检查批次容量
             int islandId = cmbIsland.SelectedIndex;
             string batchText = cmbBatch.Text.Replace("批次", "");
-            if (int.TryParse(batchText, out int batchId))
+            if (int.TryParse(batchText, out int localBatchId))
             {
-                var (currentCount, maxCapacity) = WitchDAL.GetBatchCapacity(islandId, batchId);
-                lblBatchInfo.Text = $"当前人数: {currentCount}/{maxCapacity}";
-                
-                if (currentCount >= maxCapacity)
+                // 获取全局批次ID
+                int? globalBatchId = GetGlobalBatchId(islandId, localBatchId);
+                if (globalBatchId.HasValue)
                 {
-                    lblBatchInfo.ForeColor = Color.Red;
-                    lblBatchInfo.Text += " (已满，无法添加)";
-                    btnSave.Enabled = false;
-                }
-                else
-                {
-                    lblBatchInfo.ForeColor = Color.Blue;
-                    btnSave.Enabled = true;
+                    var (currentCount, maxCapacity) = WitchDAL.GetBatchCapacity(islandId, globalBatchId.Value);
+                    lblBatchInfo.Text = $"当前人数: {currentCount}/{maxCapacity}";
+                    
+                    if (currentCount >= maxCapacity)
+                    {
+                        lblBatchInfo.ForeColor = Color.Red;
+                        lblBatchInfo.Text += " (已满，无法添加)";
+                        btnSave.Enabled = false;
+                    }
+                    else
+                    {
+                        lblBatchInfo.ForeColor = Color.Blue;
+                        btnSave.Enabled = true;
+                    }
                 }
             }
         }
@@ -855,6 +872,13 @@ namespace WitchTrialSystem.UI
             if (string.IsNullOrWhiteSpace(txtName.Text))
             {
                 errorProvider.SetError(txtName, "姓名不能为空");
+                isValid = false;
+            }
+            
+            // 验证囚犯编号（必填）
+            if (string.IsNullOrWhiteSpace(txtPrisonerNo.Text))
+            {
+                errorProvider.SetError(txtPrisonerNo, "囚犯编号不能为空");
                 isValid = false;
             }
             
@@ -940,12 +964,26 @@ namespace WitchTrialSystem.UI
                 {
                     islandId = cmbIsland.SelectedIndex;
                     
-                    if (!string.IsNullOrEmpty(cmbBatch.Text))
+                    // 只有当批次不为空且不是空选项时才处理
+                    if (!string.IsNullOrEmpty(cmbBatch.Text) && cmbBatch.Text.Trim() != "")
                     {
-                        string batchText = cmbBatch.Text.Replace("批次", "");
-                        if (int.TryParse(batchText, out int batch))
+                        string batchText = cmbBatch.Text.Replace("批次", "").Trim();
+                        if (int.TryParse(batchText, out int localBatchId))
                         {
-                            batchId = batch;
+                            // 将本地批次号转换为全局批次ID
+                            System.Diagnostics.Debug.WriteLine($"转换：岛屿{islandId}, 本地批次{localBatchId}");
+                            var globalBatchId = GetGlobalBatchId(islandId.Value, localBatchId);
+                            System.Diagnostics.Debug.WriteLine($"结果：全局批次ID = {globalBatchId}");
+                            
+                            if (globalBatchId.HasValue)
+                            {
+                                batchId = globalBatchId.Value;
+                            }
+                            else
+                            {
+                                MessageBox.Show($"错误：找不到岛屿{islandId}的本地批次{localBatchId}对应的全局批次ID。\n\n请检查数据库中是否存在该批次记录。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
                         }
                     }
                 }
@@ -999,7 +1037,7 @@ namespace WitchTrialSystem.UI
                     publicDescription: string.IsNullOrWhiteSpace(txtPublicDescription.Text) ? null : txtPublicDescription.Text.Trim(),
                     islandId: islandId,
                     batchId: batchId,
-                    avatarPath: string.IsNullOrWhiteSpace(txtAvatarPath.Text) ? null : txtAvatarPath.Text.Trim(),
+                    avatarPath: GenerateAvatarPath(txtPrisonerNo.Text),
                     captureTime: chkCaptureTime.Checked ? (DateTime?)dtpCaptureTime.Value : null,
                     departureTime: chkDepartureTime.Checked ? (DateTime?)dtpDepartureTime.Value : null,
                     arrivalTime: chkArrivalTime.Checked ? (DateTime?)dtpArrivalTime.Value : null,
@@ -1048,7 +1086,7 @@ namespace WitchTrialSystem.UI
                         publicDescription: string.IsNullOrWhiteSpace(txtPublicDescription.Text) ? null : txtPublicDescription.Text.Trim(),
                         islandId: islandId,
                         batchId: batchId,
-                        avatarPath: string.IsNullOrWhiteSpace(txtAvatarPath.Text) ? null : txtAvatarPath.Text.Trim(),
+                        avatarPath: GenerateAvatarPath(txtPrisonerNo.Text),
                         captureTime: chkCaptureTime.Checked ? (DateTime?)dtpCaptureTime.Value : null,
                         departureTime: chkDepartureTime.Checked ? (DateTime?)dtpDepartureTime.Value : null,
                         arrivalTime: chkArrivalTime.Checked ? (DateTime?)dtpArrivalTime.Value : null,
@@ -1063,6 +1101,81 @@ namespace WitchTrialSystem.UI
             catch (Exception ex)
             {
                 MessageBox.Show($"保存失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 根据囚犯编号生成头像路径
+        /// </summary>
+        private string? GenerateAvatarPath(string? prisonerNo)
+        {
+            if (string.IsNullOrWhiteSpace(prisonerNo))
+                return null;
+            
+            return $"Images\\{prisonerNo.Trim()}.png";
+        }
+
+        /// <summary>
+        /// 获取指定岛屿的本地批次列表
+        /// </summary>
+        private List<int> GetLocalBatchesByIsland(int islandId)
+        {
+            try
+            {
+                var dt = DBHelper.ExecDataTable(
+                    "SELECT LocalBatchID FROM wt.Batch WHERE IslandID = @islandId ORDER BY LocalBatchID",
+                    new SqlParameter("@islandId", islandId));
+                
+                var batches = new List<int>();
+                foreach (DataRow row in dt.Rows)
+                {
+                    batches.Add(Convert.ToInt32(row["LocalBatchID"]));
+                }
+                return batches;
+            }
+            catch
+            {
+                return new List<int>();
+            }
+        }
+
+        /// <summary>
+        /// 根据岛屿ID和本地批次号获取全局批次ID
+        /// </summary>
+        private int? GetGlobalBatchId(int islandId, int localBatchId)
+        {
+            try
+            {
+                var result = DBHelper.ExecScalar(
+                    "SELECT BatchID FROM wt.Batch WHERE IslandID = @islandId AND LocalBatchID = @localBatchId",
+                    new SqlParameter("@islandId", islandId),
+                    new SqlParameter("@localBatchId", localBatchId));
+                
+                return result != null ? Convert.ToInt32(result) : (int?)null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据岛屿ID和全局批次ID获取本地批次号
+        /// </summary>
+        private int? GetLocalBatchIdFromGlobal(int islandId, int globalBatchId)
+        {
+            try
+            {
+                var result = DBHelper.ExecScalar(
+                    "SELECT LocalBatchID FROM wt.Batch WHERE IslandID = @islandId AND BatchID = @batchId",
+                    new SqlParameter("@islandId", islandId),
+                    new SqlParameter("@batchId", globalBatchId));
+                
+                return result != null ? Convert.ToInt32(result) : (int?)null;
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -1166,12 +1279,33 @@ namespace WitchTrialSystem.UI
                 {
                     int islandId = Convert.ToInt32(row["IslandID"]);
                     cmbIsland.SelectedIndex = islandId;  // 1=岛屿1, 2=岛屿2
+                    
+                    // 加载批次后，设置选中的批次
+                    if (row["BatchID"] != DBNull.Value)
+                    {
+                        int globalBatchId = Convert.ToInt32(row["BatchID"]);
+                        // 获取本地批次号
+                        var localBatchId = GetLocalBatchIdFromGlobal(islandId, globalBatchId);
+                        if (localBatchId.HasValue)
+                        {
+                            cmbBatch.Text = $"批次{localBatchId.Value}";
+                        }
+                        else
+                        {
+                            // 如果找不到对应的本地批次，说明数据不一致，清空批次选择
+                            cmbBatch.SelectedIndex = 0; // 选择空选项
+                        }
+                    }
+                    else
+                    {
+                        // 批次为NULL，选择空选项
+                        cmbBatch.SelectedIndex = 0;
+                    }
                 }
-                if (row["BatchID"] != DBNull.Value)
+                else
                 {
-                    int batchId = Convert.ToInt32(row["BatchID"]);
-                    // 批次下拉框会在岛屿选择后自动加载
-                    cmbBatch.Text = $"批次{batchId}";
+                    // 岛屿为NULL，清空选择
+                    cmbIsland.SelectedIndex = 0;
                 }
                 txtAvatarPath.Text = GetString(row, "AvatarPath");
 

@@ -49,6 +49,111 @@ namespace WitchTrialSystem.BLL
             return rows > 0;
         }
 
+        /// <summary>
+        /// 检查魔女是否符合创建账号的条件
+        /// </summary>
+        /// <param name="status">魔女状态</param>
+        /// <param name="prisonerNo">囚犯编号</param>
+        /// <param name="batchId">批次ID</param>
+        /// <param name="witchIslandId">魔女所属岛屿ID</param>
+        /// <param name="regulatorIslandId">监管员所属岛屿ID</param>
+        /// <returns>符合条件返回true，否则返回false</returns>
+        public bool IsAccountEligible(
+            string status,
+            string? prisonerNo,
+            int? batchId,
+            int witchIslandId,
+            int regulatorIslandId)
+        {
+            // 1. 状态必须是"分配至岛屿"
+            if (status != "分配至岛屿")
+                return false;
+
+            // 2. 囚犯编号不能为空
+            if (string.IsNullOrWhiteSpace(prisonerNo))
+                return false;
+
+            // 3. 批次ID不能为空
+            if (!batchId.HasValue)
+                return false;
+
+            // 4. 魔女必须属于监管员的岛屿
+            if (witchIslandId != regulatorIslandId)
+                return false;
+
+            // 5. 账号不能已存在
+            if (_dal.UserExists(prisonerNo))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 为魔女创建用户账号
+        /// </summary>
+        /// <param name="prisonerNo">囚犯编号（作为用户名）</param>
+        /// <param name="islandId">岛屿ID</param>
+        /// <param name="batchId">批次ID</param>
+        /// <param name="witchId">魔女ID</param>
+        /// <param name="regulatorIslandId">监管员所属岛屿ID</param>
+        /// <returns>成功返回(true, 成功消息)，失败返回(false, 错误消息)</returns>
+        public (bool Success, string Message) CreateWitchAccount(
+            string prisonerNo,
+            int islandId,
+            int batchId,
+            int witchId,
+            int regulatorIslandId)
+        {
+            try
+            {
+                // 1. 验证权限：魔女必须属于监管员的岛屿
+                if (islandId != regulatorIslandId)
+                {
+                    return (false, "您只能为本岛屿的魔女创建账号");
+                }
+
+                // 2. 检查账号是否已存在
+                if (_dal.UserExists(prisonerNo))
+                {
+                    return (false, $"账号创建失败：用户名已存在（{prisonerNo}）");
+                }
+
+                // 3. 获取Witch角色ID
+                const string getRoleSql = "SELECT RoleID FROM wt.Role WHERE Name = N'Witch'";
+                var roleResult = DBHelper.ExecScalar(getRoleSql);
+                if (roleResult == null)
+                {
+                    return (false, "系统错误：无法找到Witch角色");
+                }
+                int witchRoleId = Convert.ToInt32(roleResult);
+
+                // 4. 使用固定的盐值和哈希（对应密码"123456"）
+                const string fixedSalt = "Yipintianxia_MiddleRingRoad_2025";
+                const string fixedHash = "0A98E098B42638B461C3C4E820D1D325F896928BB5DB655DA3BDDDD97F1DC976";
+
+                // 5. 创建账号和关联
+                int newUserId = _dal.CreateWitchAccountWithAssociation(
+                    prisonerNo,
+                    witchRoleId,
+                    islandId,
+                    batchId,
+                    fixedSalt,
+                    fixedHash,
+                    witchId);
+
+                return (true, $"账号创建成功！\n用户名：{prisonerNo}\n默认密码：123456\n\n请提醒魔女首次登录后修改密码。");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            {
+                // 唯一约束冲突
+                return (false, $"账号创建失败：用户名已存在（{prisonerNo}）");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"账号创建失败：{ex.Message}");
+            }
+        }
+
     }
 }
 

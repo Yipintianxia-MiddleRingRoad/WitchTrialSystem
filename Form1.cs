@@ -43,6 +43,7 @@ namespace WitchTrialSystem
         private readonly TextBox  _tbSearch = new() { PlaceholderText = "按名字搜索", Width = 220, Height = 35 };
         private readonly Button   _btnRefresh = new() { Text = "刷新", Width = 80, Height = 35 };
         private readonly Button   _btnAdd     = new() { Text = "新增魔女", Width = 100, Height = 35 };
+        private readonly Button   _btnDelete  = new() { Text = "删除魔女", Width = 100, Height = 35 };
         private readonly Label    _status     = new() { AutoSize = true, ForeColor = Color.DimGray, Padding = new Padding(8,2,8,2) };
         private readonly DataGridView _grid   = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false };
 
@@ -96,6 +97,7 @@ namespace WitchTrialSystem
         bar.Controls.Add(_tbSearch);
         bar.Controls.Add(_btnRefresh);
         bar.Controls.Add(_btnAdd);
+        bar.Controls.Add(_btnDelete);
         bar.Controls.Add(_btnStatus);          // 放在状态文本前
         bar.Controls.Add(_status);
 
@@ -116,10 +118,16 @@ namespace WitchTrialSystem
             _cbIsland.SelectedIndexChanged += (_,__) => { LoadBatches(); LoadGrid(); };
             _cbBatch.SelectedIndexChanged  += (_,__) => { LoadGrid(); };
             _btnAdd.Click += (_,__) => OnAddWitch();
+            _btnDelete.Click += (_,__) => OnDeleteWitch();
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
             _btnStatus.Click += (_, __) => OnChangeWitchStatus();
             _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
+            
+            // 右键菜单
+            var contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add("删除魔女", null, (s, e) => OnDeleteWitch());
+            _grid.ContextMenuStrip = contextMenu;
 
         }
 
@@ -231,6 +239,7 @@ namespace WitchTrialSystem
             _lblCn.Text    = $"中文名：{(cn ?? "—")}";
 
             _btnAdd.Enabled    = _canManage;   // 只有管理员/典狱长/梅露露能新增
+            _btnDelete.Enabled = (_roleName == "Admin");   // 只有国家端管理员能删除
             _btnStatus.Enabled = _canManage;   // 同上：能改状态
 
 
@@ -597,6 +606,87 @@ namespace WitchTrialSystem
                 var login = new LoginForm();
                 login.Show();
                 this.Close();
+            }
+        }
+
+        /// <summary>
+        /// 删除魔女（仅限状态为"待分配"的魔女，仅国家端管理员可操作）
+        /// </summary>
+        private void OnDeleteWitch()
+        {
+            if (_roleName != "Admin")
+            {
+                MessageBox.Show("权限不足：只有国家端管理员可以删除魔女。", "权限不足", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_grid.CurrentRow == null)
+            {
+                MessageBox.Show("请先选中一条记录。", "提示", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 获取选中行信息
+            var drv = _grid.CurrentRow.DataBoundItem as System.Data.DataRowView;
+            if (drv == null || !drv.Row.Table.Columns.Contains("WitchID"))
+            {
+                MessageBox.Show("无法获取选中行的魔女信息。", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int witchId = Convert.ToInt32(drv["WitchID"]);
+            string name = Convert.ToString(drv["Name"]) ?? $"#{witchId}";
+            string prisonerNo = Convert.ToString(drv["PrisonerNo"]) ?? "未知";
+            string status = Convert.ToString(drv["Status"]) ?? "";
+
+            // 检查状态是否为"待分配"
+            if (status != "待分配")
+            {
+                MessageBox.Show($"只能删除状态为\"待分配\"的魔女。\n\n当前魔女状态：{status}\n\n请先将魔女状态改为\"待分配\"后再删除。", 
+                    "无法删除", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 二次确认
+            var result = MessageBox.Show(
+                $"确定要删除以下魔女吗？\n\n姓名：{name}\n囚人番号：{prisonerNo}\n状态：{status}\n\n此操作不可撤销！", 
+                "确认删除", 
+                MessageBoxButtons.YesNo, 
+                MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                bool success = _dal.DeleteWitch(witchId);
+                
+                if (success)
+                {
+                    // 记录审计日志
+                    AuditDAL.Log(_userId, _username, "DeleteWitch",
+                        $"Witch:{witchId}", $"Deleted witch: {name} (PrisonerNo: {prisonerNo})");
+                    
+                    MessageBox.Show($"魔女\"{name}\"已成功删除。", "删除成功", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    
+                    LoadGrid();
+                }
+                else
+                {
+                    MessageBox.Show("删除失败，请重试。", "删除失败", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

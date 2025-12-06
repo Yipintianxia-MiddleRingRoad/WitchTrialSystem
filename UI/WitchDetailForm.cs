@@ -104,19 +104,10 @@ namespace WitchTrialSystem.UI
             _btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _btnClose.Click += (s, e) => Close();
             toolbar.Controls.Add(_btnClose);
-            
-            _btnExportPdf.Text = "📑 导出PDF";
-            _btnExportPdf.Size = new Size(120, 35);
-            _btnExportPdf.ForeColor = Color.White;
-            _btnExportPdf.BackColor = Color.FromArgb(41, 128, 185);
-            _btnExportPdf.FlatStyle = FlatStyle.Flat;
-            _btnExportPdf.FlatAppearance.BorderSize = 0;
-            _btnExportPdf.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _btnExportPdf.Click += BtnExportPdf_Click;
-            toolbar.Controls.Add(_btnExportPdf);
 
-            _btnExportWord.Text = "📄 导出Word";
-            _btnExportWord.Size = new Size(120, 35);
+            _btnExportWord.Text = "📄 导出HTML";
+            _btnExportWord.Size = new Size(160, 35);
+            _btnExportWord.Font = new Font("微软雅黑", 10);
             _btnExportWord.ForeColor = Color.White;
             _btnExportWord.BackColor = Color.FromArgb(39, 174, 96);
             _btnExportWord.FlatStyle = FlatStyle.Flat;
@@ -125,8 +116,9 @@ namespace WitchTrialSystem.UI
             _btnExportWord.Click += BtnExportWord_Click;
             toolbar.Controls.Add(_btnExportWord);
 
-            _btnPrint.Text = "🖨️ 打印";
-            _btnPrint.Size = new Size(100, 35);
+            _btnPrint.Text = "🖨️ 打印/导出PDF";
+            _btnPrint.Size = new Size(180, 35);
+            _btnPrint.Font = new Font("微软雅黑", 10);
             _btnPrint.ForeColor = Color.White;
             _btnPrint.BackColor = Color.FromArgb(52, 152, 219);
             _btnPrint.FlatStyle = FlatStyle.Flat;
@@ -141,11 +133,9 @@ namespace WitchTrialSystem.UI
                 int rightX = toolbar.Width - 20;
                 _btnClose.Location = new Point(rightX - 90, 12);
                 rightX -= 100;
-                _btnExportPdf.Location = new Point(rightX - 120, 12);
-                rightX -= 130;
-                _btnExportWord.Location = new Point(rightX - 120, 12);
-                rightX -= 130;
-                _btnPrint.Location = new Point(rightX - 100, 12);
+                _btnExportWord.Location = new Point(rightX - 160, 12);
+                rightX -= 170;
+                _btnPrint.Location = new Point(rightX - 180, 12);
             };
 
             Controls.Add(toolbar);
@@ -164,8 +154,8 @@ namespace WitchTrialSystem.UI
             _a4Panel.BackColor = Color.White;
             _a4Panel.Padding = new Padding(40, 40, 40, 40);  // A4边距
             
-            // 内容面板
-            _contentPanel.Location = new Point(0, 0);
+            // 内容面板（向下移动以避免被工具栏遮挡）
+            _contentPanel.Location = new Point(40, 40);  // 从(0,0)改为(40,40)，使用A4边距
             _contentPanel.Width = 794 - 80;  // A4宽度减去左右边距
             _contentPanel.BackColor = Color.White;
             _contentPanel.AutoScroll = false;
@@ -189,48 +179,48 @@ namespace WitchTrialSystem.UI
 
         private void BuildA4Content()
         {
-            int y = 0;
+            int y = 0;  // 从0开始，因为内容面板已经有边距了
             int contentWidth = 714;  // A4宽度(794) - 左右边距(80) = 714px
 
-            // ========== 档案标题 ==========
+            // ========== 档案标题（压缩版）==========
             var title = new Label
             {
                 Text = "魔女审判系统 · 个人档案",
                 Location = new Point(0, y),
                 Width = contentWidth,
-                Height = 40,
-                Font = new Font("黑体", 18, FontStyle.Bold),
+                Height = 32,  // 从40压缩到32
+                Font = new Font("黑体", 16, FontStyle.Bold),  // 从18压缩到16
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.FromArgb(52, 73, 94)
             };
             _contentPanel.Controls.Add(title);
-            y += 50;
+            y += 38;  // 从50压缩到38
 
             // 分隔线
             AddSeparator(_contentPanel, ref y, contentWidth);
 
-            // ========== 第一部分：头像和核心信息（横向布局）==========
+            // ========== 第一部分：头像和核心信息（横向布局，压缩版）==========
             var topSection = new Panel
             {
                 Location = new Point(0, y),
                 Width = contentWidth,
-                Height = 200,
+                Height = 150,  // 从200压缩到150
                 BackColor = Color.White
             };
 
-            // 左侧：头像
-            _avatar.Size = new Size(160, 160);
-            _avatar.Location = new Point(20, 20);
+            // 左侧：头像（压缩）
+            _avatar.Size = new Size(130, 130);  // 从160压缩到130
+            _avatar.Location = new Point(10, 10);  // 调整位置
             _avatar.SizeMode = PictureBoxSizeMode.Zoom;
             _avatar.BorderStyle = BorderStyle.FixedSingle;
             LoadAvatar();
             topSection.Controls.Add(_avatar);
 
-            // 右侧：核心信息（两列布局）
-            int infoX = 200;
-            int infoY = 20;
-            int col1Width = 250;
-            int col2Width = 250;
+            // 右侧：核心信息（两列布局，压缩）
+            int infoX = 155;  // 从200调整到155
+            int infoY = 10;  // 从20调整到10
+            int col1Width = 280;  // 从250调整到280
+            int col2Width = 280;
 
             // 第一列
             AddInfoLine(topSection, ref infoY, infoX, "囚人番号", GetString("PrisonerNo"), true);
@@ -240,8 +230,8 @@ namespace WitchTrialSystem.UI
             AddInfoLine(topSection, ref infoY, infoX, "性别", GetString("Gender"));
 
             // 第二列
-            infoY = 20;
-            infoX = 200 + col1Width;
+            infoY = 10;  // 从20调整到10
+            infoX = 155 + col1Width;
             AddInfoLine(topSection, ref infoY, infoX, "出生日期", GetDate("BirthDate"));
             AddInfoLine(topSection, ref infoY, infoX, "年龄", GetString("Age") + " 岁");
             AddInfoLine(topSection, ref infoY, infoX, "民族", GetString("Ethnicity"));
@@ -249,7 +239,7 @@ namespace WitchTrialSystem.UI
             AddInfoLine(topSection, ref infoY, infoX, "状态", GetString("Status"), true);
 
             _contentPanel.Controls.Add(topSection);
-            y += 210;
+            y += 160;  // 从210压缩到160
 
             // ========== 第二部分：身体特征和魔法能力 ==========
             AddSectionTitle(_contentPanel, ref y, "身体特征与能力", contentWidth);
@@ -265,7 +255,7 @@ namespace WitchTrialSystem.UI
             physicalPanel.Location = new Point(0, y);
             physicalPanel.Width = contentWidth;
             _contentPanel.Controls.Add(physicalPanel);
-            y += physicalPanel.Height + 15;
+            y += physicalPanel.Height + 10;  // 从15压缩到10
 
             // ========== 第三部分：联系方式 ==========
             AddSectionTitle(_contentPanel, ref y, "联系方式", contentWidth);
@@ -280,7 +270,7 @@ namespace WitchTrialSystem.UI
             contactPanel.Location = new Point(0, y);
             contactPanel.Width = contentWidth;
             _contentPanel.Controls.Add(contactPanel);
-            y += contactPanel.Height + 15;
+            y += contactPanel.Height + 10;  // 从15压缩到10
 
             // ========== 第四部分：教育背景 ==========
             AddSectionTitle(_contentPanel, ref y, "教育背景", contentWidth);
@@ -314,23 +304,35 @@ namespace WitchTrialSystem.UI
             AddTextBlock(_contentPanel, ref y, "公开描述", GetString("DescriptionPublic"), contentWidth);
 
             // ========== 页脚 ==========
-            y += 20;
+            y += 15;  // 从20压缩到15
             var footer = new Label
             {
                 Text = $"档案编号：{GetString("PrisonerNo")} | 生成日期：{DateTime.Now:yyyy-MM-dd HH:mm}",
                 Location = new Point(0, y),
                 Width = contentWidth,
-                Height = 20,
-                Font = new Font("微软雅黑", 8),
+                Height = 18,  // 从20压缩到18
+                Font = new Font("微软雅黑", 7.5f),  // 从8压缩到7.5
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.Gray
             };
             _contentPanel.Controls.Add(footer);
-            y += 30;
+            y += 25;  // 从30压缩到25
 
             // 设置内容面板高度
             _contentPanel.Height = y;
-            _a4Panel.Height = Math.Max(1123, y + 80);  // 至少一页A4
+            
+            // 尝试将内容压缩到一页A4（1123px），如果超出则允许扩展
+            int targetHeight = 1123 - 80;  // A4高度减去上下边距
+            if (y > targetHeight)
+            {
+                // 内容超出一页，允许扩展
+                _a4Panel.Height = y + 80;
+            }
+            else
+            {
+                // 内容在一页内，固定为A4高度
+                _a4Panel.Height = 1123;
+            }
         }
 
 
@@ -432,15 +434,15 @@ namespace WitchTrialSystem.UI
                 Text = title,
                 Location = new Point(0, y),
                 Width = width,
-                Height = 30,
-                Font = new Font("微软雅黑", 11, FontStyle.Bold),
+                Height = 24,  // 从30压缩到24
+                Font = new Font("微软雅黑", 10, FontStyle.Bold),  // 从11压缩到10
                 ForeColor = color ?? Color.FromArgb(52, 73, 94),
                 BackColor = Color.FromArgb(240, 240, 240),
                 TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(10, 0, 0, 0)
+                Padding = new Padding(8, 0, 0, 0)  // 从10压缩到8
             };
             parent.Controls.Add(lbl);
-            y += 35;
+            y += 28;  // 从35压缩到28
         }
 
         private void AddInfoLine(Panel parent, ref int y, int x, string label, string value, bool bold = false)
@@ -452,10 +454,10 @@ namespace WitchTrialSystem.UI
                 Text = $"{label}：{value}",
                 Location = new Point(x, y),
                 AutoSize = true,
-                Font = new Font("微软雅黑", 9, bold ? FontStyle.Bold : FontStyle.Regular)
+                Font = new Font("微软雅黑", 8.5f, bold ? FontStyle.Bold : FontStyle.Regular)  // 从9压缩到8.5
             };
             parent.Controls.Add(lbl);
-            y += 25;
+            y += 22;  // 从25压缩到22
         }
 
         private Panel CreateInfoGrid((string label, string value)[] items, int columns)
@@ -465,11 +467,11 @@ namespace WitchTrialSystem.UI
                 Width = 714,  // 固定宽度
                 BackColor = Color.FromArgb(250, 250, 250),
                 BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(15)
+                Padding = new Padding(10)  // 从15压缩到10
             };
 
-            int itemWidth = (714 - 30) / columns;
-            int x = 10, y = 10;
+            int itemWidth = (714 - 20) / columns;  // 从30调整到20
+            int x = 8, y = 8;  // 从10调整到8
             int col = 0;
 
             foreach (var (label, value) in items)
@@ -480,9 +482,9 @@ namespace WitchTrialSystem.UI
                 {
                     Text = $"{label}：{value}",
                     Location = new Point(x, y),
-                    Width = itemWidth - 10,
-                    Height = 25,
-                    Font = new Font("微软雅黑", 9)
+                    Width = itemWidth - 8,  // 从10调整到8
+                    Height = 20,  // 从25压缩到20
+                    Font = new Font("微软雅黑", 8.5f)  // 从9压缩到8.5
                 };
                 panel.Controls.Add(lbl);
 
@@ -490,8 +492,8 @@ namespace WitchTrialSystem.UI
                 if (col >= columns)
                 {
                     col = 0;
-                    x = 10;
-                    y += 30;
+                    x = 8;
+                    y += 24;  // 从30压缩到24
                 }
                 else
                 {
@@ -499,7 +501,7 @@ namespace WitchTrialSystem.UI
                 }
             }
 
-            panel.Height = y + 40;
+            panel.Height = y + 30;  // 从40压缩到30
             return panel;
         }
 
@@ -512,35 +514,35 @@ namespace WitchTrialSystem.UI
                 Text = label + "：",
                 Location = new Point(0, y),
                 Width = width,
-                Height = 20,
-                Font = new Font("微软雅黑", 9, FontStyle.Bold),
+                Height = 18,  // 从20压缩到18
+                Font = new Font("微软雅黑", 8.5f, FontStyle.Bold),  // 从9压缩到8.5
                 ForeColor = Color.FromArgb(100, 100, 100)
             };
             parent.Controls.Add(lblLabel);
-            y += 22;
+            y += 20;  // 从22压缩到20
 
             var lblValue = new Label
             {
                 Text = value,
-                Location = new Point(10, y),
-                Width = width - 20,
+                Location = new Point(8, y),  // 从10调整到8
+                Width = width - 16,  // 从20调整到16
                 AutoSize = false,
                 Height = 0,  // 先设为0
-                Font = new Font("微软雅黑", 9),
+                Font = new Font("微软雅黑", 8.5f),  // 从9压缩到8.5
                 BackColor = bgColor ?? Color.FromArgb(250, 250, 250),
-                Padding = new Padding(10),
+                Padding = new Padding(8),  // 从10压缩到8
                 BorderStyle = BorderStyle.FixedSingle
             };
             
             // 计算实际需要的高度
             using (var g = lblValue.CreateGraphics())
             {
-                var size = g.MeasureString(value, lblValue.Font, lblValue.Width - 20);
-                lblValue.Height = (int)size.Height + 20;
+                var size = g.MeasureString(value, lblValue.Font, lblValue.Width - 16);
+                lblValue.Height = Math.Max(24, (int)size.Height + 16);  // 最小高度24，从20调整到16
             }
             
             parent.Controls.Add(lblValue);
-            y += lblValue.Height + 10;
+            y += lblValue.Height + 8;  // 从10压缩到8
         }
 
         // ========== 导出功能 ==========
@@ -557,12 +559,24 @@ namespace WitchTrialSystem.UI
                 {
                     printDocument.PrinterSettings = printDialog.PrinterSettings;
                     printDocument.Print();
-                    MessageBox.Show("打印任务已发送！", "打印", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    
+                    // 检查是否选择了PDF打印机
+                    string printerName = printDialog.PrinterSettings.PrinterName.ToLower();
+                    if (printerName.Contains("pdf"))
+                    {
+                        MessageBox.Show("PDF导出任务已发送！\n\n请在打印对话框中选择保存位置。", 
+                            "导出PDF", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("打印任务已发送！\n\n提示：如需导出PDF，请在打印对话框中选择 'Microsoft Print to PDF' 打印机。", 
+                            "打印", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"打印失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -574,8 +588,19 @@ namespace WitchTrialSystem.UI
             var bitmap = new Bitmap(_a4Panel.Width, _a4Panel.Height);
             _a4Panel.DrawToBitmap(bitmap, new Rectangle(0, 0, _a4Panel.Width, _a4Panel.Height));
             
-            // 缩放到打印页面
-            e.Graphics.DrawImage(bitmap, e.MarginBounds);
+            // 计算缩放比例，保持宽高比
+            float scaleWidth = (float)e.MarginBounds.Width / _a4Panel.Width;
+            float scaleHeight = (float)e.MarginBounds.Height / _a4Panel.Height;
+            float scale = Math.Min(scaleWidth, scaleHeight);  // 使用较小的缩放比例以保持宽高比
+            
+            int scaledWidth = (int)(_a4Panel.Width * scale);
+            int scaledHeight = (int)(_a4Panel.Height * scale);
+            
+            // 居中绘制
+            int x = e.MarginBounds.Left + (e.MarginBounds.Width - scaledWidth) / 2;
+            int y = e.MarginBounds.Top;
+            
+            e.Graphics.DrawImage(bitmap, x, y, scaledWidth, scaledHeight);
         }
 
         private void BtnExportWord_Click(object? sender, EventArgs e)
@@ -586,17 +611,17 @@ namespace WitchTrialSystem.UI
                 {
                     Filter = "HTML文件 (*.html)|*.html",
                     FileName = $"魔女档案_{GetString("Name")}_{GetString("PrisonerNo")}.html",
-                    Title = "导出为HTML（可用Word打开）"
+                    Title = "导出为HTML"
                 };
 
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     ExportToHtml(saveDialog.FileName);
-                    MessageBox.Show($"导出成功！\n文件：{saveDialog.FileName}\n\n可以用Word打开此HTML文件。", 
+                    MessageBox.Show($"HTML文件导出成功！\n\n文件位置：{saveDialog.FileName}\n\n提示：可以用浏览器打开查看，也可以用Word打开编辑。", 
                         "导出成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     
                     // 询问是否打开文件
-                    if (MessageBox.Show("是否立即打开文件？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    if (MessageBox.Show("是否立即用浏览器打开文件？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
@@ -610,12 +635,6 @@ namespace WitchTrialSystem.UI
             {
                 MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void BtnExportPdf_Click(object? sender, EventArgs e)
-        {
-            MessageBox.Show("PDF导出功能需要安装第三方库（如iTextSharp）。\n\n当前建议：\n1. 使用'导出Word'功能导出HTML\n2. 用Word打开后另存为PDF\n\n或者使用'打印'功能，选择'Microsoft Print to PDF'", 
-                "PDF导出", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void ExportToHtml(string filePath)

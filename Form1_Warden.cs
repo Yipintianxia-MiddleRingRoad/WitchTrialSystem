@@ -42,14 +42,12 @@ namespace WitchTrialSystem
         private readonly ComboBox _cbBatch  = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120, Height = 35 };
         private readonly TextBox  _tbSearch = new() { PlaceholderText = "按名字搜索", Width = 220, Height = 35 };
         private readonly Button   _btnRefresh = new() { Text = "刷新", Width = 80, Height = 35 };
-        private readonly Button   _btnAdd     = new() { Text = "新增魔女", Width = 100, Height = 35 };
         private readonly Label    _status     = new() { AutoSize = true, ForeColor = Color.DimGray, Padding = new Padding(8,2,8,2) };
         private readonly DataGridView _grid   = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false };
 
         // 用户操作按钮
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
-        private readonly Button _btnStatus     = new() { Text = "更改状态", Width = 100, Height = 35 };
         
         #endregion
 
@@ -99,8 +97,6 @@ namespace WitchTrialSystem
         bar.Controls.Add(_cbBatch);
         bar.Controls.Add(_tbSearch);
         bar.Controls.Add(_btnRefresh);
-        bar.Controls.Add(_btnAdd);
-        bar.Controls.Add(_btnStatus);          // 放在状态文本前
         bar.Controls.Add(_status);
 
 
@@ -119,10 +115,8 @@ namespace WitchTrialSystem
             _tbSearch.KeyDown += (s,e)=>{ if(e.KeyCode==Keys.Enter){ e.SuppressKeyPress=true; LoadGrid(); } };
             _cbIsland.SelectedIndexChanged += (_,__) => { LoadBatches(); LoadGrid(); };
             _cbBatch.SelectedIndexChanged  += (_,__) => { LoadGrid(); };
-            _btnAdd.Click += (_,__) => OnAddWitch();
             _btnChangePwd.Click += (_, __) => OnChangePassword();
             _btnLogout.Click    += (_, __) => OnLogout();
-            _btnStatus.Click += (_, __) => OnChangeWitchStatus();
             _grid.CellDoubleClick += Grid_CellDoubleClick;  // 双击查看详情
 
         }
@@ -234,8 +228,7 @@ namespace WitchTrialSystem
             _lblRole.Text  = $"角色：{role}";
             _lblCn.Text    = $"中文名：{(cn ?? "—")}";
 
-            _btnAdd.Enabled    = _canManage;   // 只有管理员/典狱长/梅露露能新增
-            _btnStatus.Enabled = _canManage;   // 同上：能改状态
+            // 已删除新增魔女和更改状态按钮
 
 
             // 头像：支持绝对/相对路径（相对路径以程序目录为基准），缺图用占位
@@ -418,8 +411,21 @@ namespace WitchTrialSystem
                 // 显示记录数
                 _status.Text = $"共 {dt.Rows.Count} 条";
                 
+                // 岛屿信息（放在最前面）
+                var c = cols["IslandID"];      
+                if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["IslandName"];    
+                if (c != null) { c.HeaderText = "岛屿名称"; c.Width = 100; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["BatchID"];       
+                if (c != null) { c.HeaderText = "全局批次"; c.Width = 70; c.DisplayIndex = displayIndex++; }
+                
+                c = cols["LocalBatchID"];  
+                if (c != null) { c.HeaderText = "本岛批次"; c.Width = 70; c.DisplayIndex = displayIndex++; }
+                
                 // 核心识别信息
-                var c = cols["PrisonerNo"];    
+                c = cols["PrisonerNo"];    
                 if (c != null) { c.HeaderText = "囚人番号"; c.Width = 80; c.DisplayIndex = displayIndex++; }
                 
                 c = cols["PersonalNo"];    
@@ -480,12 +486,6 @@ namespace WitchTrialSystem
                 if (c != null) { c.HeaderText = "心理创伤"; c.Width = 200; c.DisplayIndex = displayIndex++; }
                 
                 // 系统字段
-                c = cols["IslandID"];      
-                if (c != null) { c.HeaderText = "岛"; c.Width = 40; c.DisplayIndex = displayIndex++; }
-                
-                c = cols["BatchID"];       
-                if (c != null) { c.HeaderText = "批次"; c.Width = 50; c.DisplayIndex = displayIndex++; }
-                
                 c = cols["WitchID"];   
                 if (c != null) { c.HeaderText = "ID"; c.Width = 50; c.DisplayIndex = displayIndex++; }
                 
@@ -517,33 +517,6 @@ namespace WitchTrialSystem
         #endregion
 
         #region 业务操作方法
-        
-        /// <summary>
-        /// 新增魔女
-        /// </summary>
-        private void OnAddWitch()
-        {
-            if (_cbIsland.SelectedValue is not int islandId || _cbBatch.SelectedValue is not int batchId)
-            { MessageBox.Show("请先选择岛屿与批次。"); return; }
-
-            string? name = Prompt("姓名（必填）：", "新增魔女"); if (string.IsNullOrWhiteSpace(name)) return;
-            string? magic = Prompt("魔法（可空）：", "新增魔女");
-            string? prisoner = Prompt("囚犯编号（可空）：", "新增魔女");
-
-            try
-            {
-                _dal.AddWitch(name.Trim(),
-                    string.IsNullOrWhiteSpace(magic)?null:magic.Trim(),
-                    string.IsNullOrWhiteSpace(prisoner)?null:prisoner.Trim(),
-                    islandId, batchId);
-                LoadGrid();
-                MessageBox.Show("新增成功（批次>13会被拒绝）。");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("新增失败：" + ex.Message);
-            }
-        }
         
         /// <summary>
         /// 修改密码
@@ -601,70 +574,6 @@ namespace WitchTrialSystem
                 var login = new LoginForm();
                 login.Show();
                 this.Close();
-            }
-        }
-
-        /// <summary>
-        /// 更改魔女状态
-        /// </summary>
-        private void OnChangeWitchStatus()
-        {
-            if (!_canManage)
-            {
-                MessageBox.Show("权限不足：仅 Admin/Warden/Meruru 可以更改状态。");
-                return;
-            }
-            if (_grid.CurrentRow == null)
-            {
-                MessageBox.Show("请先选中一条记录。");
-                return;
-            }
-
-            // 取选中行 WitchID
-            var drv = _grid.CurrentRow.DataBoundItem as System.Data.DataRowView;
-            if (drv == null || !drv.Row.Table.Columns.Contains("WitchID"))
-            {
-                MessageBox.Show("无法获取选中行的 WitchID。");
-                return;
-            }
-            int witchId = Convert.ToInt32(drv["WitchID"]);
-            string name = Convert.ToString(drv["Name"]) ?? $"#{witchId}";
-            string oldStatus = Convert.ToString(drv["Status"]) ?? "Unknown";
-
-            // 弹出对话框选择新状态 & 处刑结果
-            using var f = new Form { Width = 360, Height = 230, Text = "更改状态", StartPosition = FormStartPosition.CenterParent };
-            var l1 = new Label { Left = 12, Top = 14, Text = $"目标：{name}", AutoSize = true };
-            var l2 = new Label { Left = 12, Top = 44, Text = "当前状态：" + oldStatus, AutoSize = true };
-            var l3 = new Label { Left = 12, Top = 74, Text = "新状态", AutoSize = true };
-            var cb = new ComboBox { Left = 100, Top = 70, Width = 220, DropDownStyle = ComboBoxStyle.DropDownList };
-            cb.Items.AddRange(new object[] { "Normal", "OnTrial", "Executed", "Acquitted" });
-            cb.SelectedIndex = 0;
-
-            var l4 = new Label { Left = 12, Top = 110, Text = "处刑结果（可空）", AutoSize = true };
-            var tb = new TextBox { Left = 140, Top = 106, Width = 180 };
-
-            var ok = new Button { Left = 170, Top = 140, Width = 75, Text = "确定", DialogResult = DialogResult.OK };
-            var ca = new Button { Left = 255, Top = 140, Width = 75, Text = "取消", DialogResult = DialogResult.Cancel };
-            f.Controls.AddRange(new Control[] { l1, l2, l3, cb, l4, tb, ok, ca });
-            f.AcceptButton = ok; f.CancelButton = ca;
-
-            if (f.ShowDialog(this) != DialogResult.OK) return;
-
-            string newStatus = cb.SelectedItem?.ToString() ?? "Normal";
-            string? execResult = string.IsNullOrWhiteSpace(tb.Text) ? null : tb.Text.Trim();
-
-            try
-            {
-                _dal.UpdateStatus(witchId, newStatus, execResult);
-                AuditDAL.Log(_userId, _username, "UpdateStatus",
-                            $"Witch:{witchId}", $"from {oldStatus} to {newStatus}; result={execResult ?? "(null)"}");
-
-                LoadGrid();
-                MessageBox.Show("状态已更新。");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("更新失败：" + ex.Message);
             }
         }
 

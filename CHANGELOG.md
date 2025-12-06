@@ -1,5 +1,49 @@
 # WitchTrialSystem 更新日志
 
+## [1.5.1] - 2024-12-06
+
+### 新增
+- ✨ **魔女账号创建功能**
+  - 监管员可为已分配到本岛屿但无账号的魔女创建账号
+  - 右键菜单"创建账号"选项
+  - 用户名自动使用囚犯编号（PrisonerNo）
+  - 默认密码统一为 123456
+  - 完整的权限控制和资格验证
+  - 事务性操作保证数据一致性
+- ✨ **智慧可视化大屏优化**
+  - 修复饼图颜色显示问题，现在正确使用状态对应的颜色
+  - 优化热力图图例位置
+
+### 改进
+- 🔧 **DAL层优化**
+  - 新增 `UserDAL.UserExists()` - 检查用户名是否存在
+  - 新增 `UserDAL.CreateWitchAccountWithAssociation()` - 事务性创建账号和关联
+  - 修复数据库连接管理问题
+- 🔧 **BLL层优化**
+  - 新增 `UserBLL.IsAccountEligible()` - 验证魔女创建账号资格
+  - 新增 `UserBLL.CreateWitchAccount()` - 账号创建业务逻辑
+- 🔧 **UI层优化**
+  - Form1_Regulator 新增"创建账号"右键菜单项
+  - 完善的用户提示和错误处理
+  - 创建成功后自动刷新数据列表
+
+### 技术细节
+- ✅ 固定盐值：`Yipintianxia_MiddleRingRoad_2025`
+- ✅ 固定哈希：`0A98E098B42638B461C3C4E820D1D325F896928BB5DB655DA3BDDDD97F1DC976`（对应密码 123456）
+- ✅ 资格检查：状态="分配至岛屿"、有囚犯编号、有批次ID、属于监管员岛屿、无现有账号
+- ✅ 事务保证：User 和 UserWitch 记录原子性创建
+
+### 文件变更
+- 📦 新增 `.kiro/specs/witch-account-creation/requirements.md` - 需求文档
+- 📦 新增 `.kiro/specs/witch-account-creation/design.md` - 设计文档
+- 📦 新增 `.kiro/specs/witch-account-creation/tasks.md` - 任务清单
+- 📝 更新 `DAL/UserDAL.cs`
+- 📝 更新 `BLL/UserBLL.cs`
+- 📝 更新 `Form1_Regulator.cs`
+- 📝 更新 `UI/DashboardForm.cs`
+
+---
+
 ## [1.5.0] - 2024-12-03 🎉
 
 ### 🚀 重大突破：前后端联动完整实现

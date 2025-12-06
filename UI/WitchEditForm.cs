@@ -716,7 +716,12 @@ namespace WitchTrialSystem.UI
                     if (row["BatchID"] != DBNull.Value)
                     {
                         int batchId = Convert.ToInt32(row["BatchID"]);
-                        cmbBatch.Text = $"批次{batchId}";
+                        // 根据BatchID获取LocalBatchID来显示
+                        int? localBatchId = WitchDAL.GetLocalBatchIdByBatchId(batchId);
+                        if (localBatchId.HasValue)
+                        {
+                            cmbBatch.Text = $"批次{localBatchId.Value}";
+                        }
                     }
                 }
                 txtAvatarPath.Text = row["AvatarPath"]?.ToString() ?? "";
@@ -955,7 +960,10 @@ namespace WitchTrialSystem.UI
             
             if (islandId > 0)
             {
-                // 根据岛屿加载批次（简化版，实际应该从数据库查询）
+                // 添加空选项
+                cmbBatch.Items.Add("");
+                
+                // 根据岛屿加载批次
                 for (int i = 1; i <= 10; i++)
                 {
                     cmbBatch.Items.Add($"批次{i}");
@@ -1078,9 +1086,10 @@ namespace WitchTrialSystem.UI
                     if (!string.IsNullOrEmpty(cmbBatch.Text))
                     {
                         string batchText = cmbBatch.Text.Replace("批次", "");
-                        if (int.TryParse(batchText, out int batch))
+                        if (int.TryParse(batchText, out int localBatchId))
                         {
-                            batchId = batch;
+                            // 根据岛屿ID和本地批次号获取全局批次ID
+                            batchId = WitchDAL.GetBatchIdByLocal(islandId.Value, localBatchId);
                         }
                     }
                 }
