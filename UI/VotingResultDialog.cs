@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -19,7 +19,7 @@ namespace WitchTrialSystem.UI
         private readonly Label _lblTitle = new() { Text = "投票结果", AutoSize = true, Font = new Font("Segoe UI", 12, FontStyle.Bold) };
         private readonly DataGridView _gridStatistics = new() { ReadOnly = true, AllowUserToAddRows = false };
         private readonly DataGridView _gridDetails = new() { ReadOnly = true, AllowUserToAddRows = false };
-        private readonly Button _btnConfirm = new() { Text = "确认处刑对象", Width = 120, Height = 40 };
+        private readonly Button _btnConfirm = new() { Text = "确认处刑对象", Width = 140, Height = 40 };
         private readonly Button _btnClose = new() { Text = "关闭", Width = 100, Height = 35, DialogResult = DialogResult.Cancel };
         
         public VotingResultDialog(int sessionId, int userId)

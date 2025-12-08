@@ -101,7 +101,7 @@ namespace WitchTrialSystem.UI
         {
             var panel = new Panel
             {
-                Height = 50,
+                Height = 60,  // 增加高度
                 BackColor = Color.WhiteSmoke,
                 Padding = new Padding(10)
             };
@@ -110,21 +110,31 @@ namespace WitchTrialSystem.UI
             {
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false
+                WrapContents = false,
+                AutoScroll = true  // 添加滚动条
             };
             
             // 岛屿选择（仅Admin可见）
             if (_roleName == "Admin")
             {
-                flow.Controls.Add(new Label { Text = "岛屿：", AutoSize = true, Padding = new Padding(0, 6, 5, 0) });
+                flow.Controls.Add(new Label { Text = "岛屿：", AutoSize = true, Padding = new Padding(0, 8, 5, 0) });
                 flow.Controls.Add(_cbIsland);
             }
             
+            _btnRefresh.Height = 35;  // 增加按钮高度
             flow.Controls.Add(_btnRefresh);
+            
+            _lblStatus.Padding = new Padding(10, 10, 10, 0);
             flow.Controls.Add(_lblStatus);
             
             // 查看移动记录按钮
-            var btnViewLog = new Button { Text = "查看移动记录", Width = 120, Margin = new Padding(10, 0, 0, 0) };
+            var btnViewLog = new Button 
+            { 
+                Text = "查看移动记录", 
+                Width = 130,  // 增加宽度
+                Height = 35,  // 增加高度
+                Margin = new Padding(10, 0, 0, 0) 
+            };
             btnViewLog.Click += (s, e) => OpenMovementLogView();
             flow.Controls.Add(btnViewLog);
             
@@ -208,15 +218,17 @@ namespace WitchTrialSystem.UI
             
             var groupBox = new GroupBox
             {
-                Text = "审判庭（1F）- 位置50",
+                Text = "🏛️ 审判庭（1F）- 位置50",
                 Dock = DockStyle.Fill,
-                Padding = new Padding(10)
+                Padding = new Padding(10),
+                Font = new Font("Microsoft YaHei", 11, FontStyle.Bold),  // 加粗字体
+                ForeColor = Color.DarkRed  // 深红色标题
             };
             
             _trialHallPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.LightYellow,
+                BackColor = Color.FromArgb(255, 250, 205),  // 浅黄色背景
                 BorderStyle = BorderStyle.FixedSingle
             };
             
@@ -225,7 +237,8 @@ namespace WitchTrialSystem.UI
                 Text = "空闲",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Microsoft YaHei", 12, FontStyle.Bold),
+                Font = new Font("Microsoft YaHei", 14, FontStyle.Bold),  // 更大的字体
+                ForeColor = Color.Gray,
                 Tag = 50
             };
             

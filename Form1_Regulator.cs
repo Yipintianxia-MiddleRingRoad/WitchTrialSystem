@@ -50,7 +50,7 @@ namespace WitchTrialSystem
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
         private readonly Button _btnDashboard = new() { Text = "📊 智慧大屏", Width = 120, Height = 35 };
-        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 120, Height = 35 };
+        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 140, Height = 35 };  // 增加宽度：120 → 140
         private readonly Button _btnMovementLog = new() { Text = "📋 移动记录", Width = 120, Height = 35 };
         
         #endregion

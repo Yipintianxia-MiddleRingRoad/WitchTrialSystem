@@ -53,24 +53,27 @@ namespace WitchTrialSystem.UI
         private void SetupLayout()
         {
             // 加载背景图
-            string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "phone_bg.png");
+            string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "trial_voting_bg.png");
             if (File.Exists(bgPath))
             {
                 _bg.BackgroundImage = Image.FromFile(bgPath);
             }
             
-            // 标题
-            _lblTitle.Location = new Point(20, 20);
+            // 标题 - 向右移动37px，向下移动59px，背景透明
+            _lblTitle.Location = new Point(57, 79);
             _lblTitle.ForeColor = Color.White;
+            _lblTitle.BackColor = Color.Transparent;
             
-            // 说明文字
-            _lblInstruction.Location = new Point(20, 55);
+            // 说明文字 - 向右移动37px，向下移动59px，背景透明
+            _lblInstruction.Location = new Point(57, 114);
             _lblInstruction.ForeColor = Color.LightGray;
+            _lblInstruction.BackColor = Color.Transparent;
             
-            // 参与者列表容器
+            // 参与者列表容器 - 背景透明以显示手机背景图
             _flowPanel.Location = new Point(20, 90);
             _flowPanel.Size = new Size(420, 580);
             _flowPanel.Padding = new Padding(5);
+            _flowPanel.BackColor = Color.Transparent;
             
             // 确认按钮
             _btnConfirm.Location = new Point((Width - _btnConfirm.Width) / 2, 685);

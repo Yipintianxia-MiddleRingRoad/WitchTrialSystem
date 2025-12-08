@@ -93,7 +93,9 @@ namespace WitchTrialSystem.UI
             InitializeForm();
             LoadBackground();
             SetupButtons();
-            CheckNotifications(); // 检查未读通知
+            
+            // 窗口显示后再检查通知
+            this.Shown += (s, e) => CheckNotifications();
         }
 
         /// <summary>

@@ -46,6 +46,7 @@ namespace WitchTrialSystem
         private readonly Button   _btnDelete  = new() { Text = "删除魔女", Width = 100, Height = 35 };
         private readonly Button   _btnAddCountry = new() { Text = "国家层添加", Width = 110, Height = 35 };
         private readonly Button   _btnDashboard = new() { Text = "📊 智慧大屏", Width = 120, Height = 35 };
+        private readonly Button   _btnAIChat = new() { Text = "🤖 智慧大模型", Width = 150, Height = 35 };  // 增加宽度：130 → 150
         private readonly Label    _status     = new() { AutoSize = true, ForeColor = Color.DimGray, Padding = new Padding(8,2,8,2) };
         private readonly DataGridView _grid   = new() { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false };
 
@@ -53,7 +54,7 @@ namespace WitchTrialSystem
         private readonly Button _btnChangePwd = new() { Text = "修改密码", AutoSize = true };
         private readonly Button _btnLogout    = new() { Text = "退出登录", AutoSize = true };
         private readonly Button _btnStatus     = new() { Text = "更改状态", Width = 100, Height = 35 };
-        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 120, Height = 35 };
+        private readonly Button _btnPlatformMgmt = new() { Text = "🔧 处刑台管理", Width = 140, Height = 35 };  // 增加宽度：120 → 140
         private readonly Button _btnMovementLog = new() { Text = "📋 移动记录", Width = 120, Height = 35 };
         
         #endregion
@@ -107,6 +108,7 @@ namespace WitchTrialSystem
         bar.Controls.Add(_btnAddCountry);
         bar.Controls.Add(_btnDelete);
         bar.Controls.Add(_btnDashboard);
+        bar.Controls.Add(_btnAIChat);
         bar.Controls.Add(_btnPlatformMgmt);
         bar.Controls.Add(_btnMovementLog);
         bar.Controls.Add(_status);
@@ -130,6 +132,7 @@ namespace WitchTrialSystem
             _btnAddCountry.Click += (_,__) => OnAddWitchCountry();
             _btnDelete.Click += (_,__) => OnDeleteWitch();
             _btnDashboard.Click += (_,__) => OnOpenDashboard();
+            _btnAIChat.Click += (_,__) => OnOpenAIChat();
             _btnPlatformMgmt.Click += (_, __) => OnOpenPlatformManagement();
             _btnMovementLog.Click += (_, __) => OnOpenMovementLog();
             _btnChangePwd.Click += (_, __) => OnChangePassword();
@@ -597,6 +600,70 @@ namespace WitchTrialSystem
             catch (Exception ex)
             {
                 MessageBox.Show($"打开大屏失败：{ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 打开智慧大模型聊天界面
+        /// </summary>
+        private void OnOpenAIChat()
+        {
+            try
+            {
+                string apiKey = "";
+                string modelId = "";
+                
+                // 从appsettings.json读取配置
+                try
+                {
+                    var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                    if (File.Exists(jsonPath))
+                    {
+                        var jsonText = File.ReadAllText(jsonPath);
+                        var jsonDoc = System.Text.Json.JsonDocument.Parse(jsonText);
+                        
+                        if (jsonDoc.RootElement.TryGetProperty("DouBaoAI", out var douBaoConfig))
+                        {
+                            if (douBaoConfig.TryGetProperty("ApiKey", out var apiKeyProp))
+                                apiKey = apiKeyProp.GetString() ?? "";
+                            if (douBaoConfig.TryGetProperty("ModelId", out var modelIdProp))
+                                modelId = modelIdProp.GetString() ?? "";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"读取配置文件失败：{ex.Message}\n\n请检查 appsettings.json 格式是否正确。",
+                        "配置错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    return;
+                }
+                
+                // 检查配置
+                if (string.IsNullOrEmpty(apiKey) || apiKey == "YOUR_API_KEY_HERE" ||
+                    string.IsNullOrEmpty(modelId) || modelId == "YOUR_MODEL_ID_HERE")
+                {
+                    MessageBox.Show(
+                        "请先在 appsettings.json 中配置豆包AI的 ApiKey 和 ModelId。\n\n" +
+                        "配置路径：DouBaoAI -> ApiKey 和 ModelId",
+                        "配置提示",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    return;
+                }
+                
+                // 打开AI聊天窗口
+                var chatForm = new WitchTrialSystem.UI.AIChatForm(apiKey, modelId);
+                chatForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开智慧大模型失败：{ex.Message}\n\n{ex.StackTrace}", "错误", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

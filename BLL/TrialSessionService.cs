@@ -111,7 +111,7 @@ namespace WitchTrialSystem.BLL
                     {
                         SessionID = sessionID,
                         UserID = participant.UserID,
-                        Message = "呀咧呀咧，又死人了，真实的，请速速前往审判庭",
+                        Message = "呀咧呀咧，又死人了，真是的，请速速前往审判庭",
                         IsRead = false,
                         CreatedAt = DateTime.Now
                     });

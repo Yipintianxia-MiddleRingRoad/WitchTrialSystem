@@ -38,8 +38,8 @@ namespace WitchTrialSystem.UI
         private void InitializeForm()
         {
             Text = "审判通知";
-            Width = 400;
-            Height = 150;
+            Width = 500;   // 增加宽度：400 → 500
+            Height = 200;  // 增加高度：150 → 200
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -53,12 +53,12 @@ namespace WitchTrialSystem.UI
         {
             // 典狱长头像（左侧）
             _picAvatar.Location = new Point(15, 15);
-            _picAvatar.Size = new Size(100, 100);
+            _picAvatar.Size = new Size(150, 150);  // 增加头像尺寸：100x100 → 150x150
             
             // 通知文字（右侧）
-            _lblMessage.Location = new Point(125, 15);
-            _lblMessage.Size = new Size(250, 100);
-            _lblMessage.Font = new Font("Microsoft YaHei UI", 10);
+            _lblMessage.Location = new Point(180, 15);  // 调整位置
+            _lblMessage.Size = new Size(300, 150);  // 增加文字区域：250x100 → 300x150
+            _lblMessage.Font = new Font("Microsoft YaHei UI", 11);  // 增大字体：10 → 11
             _lblMessage.Text = _notification.Message;
             
             Controls.Add(_picAvatar);
@@ -69,36 +69,40 @@ namespace WitchTrialSystem.UI
         {
             try
             {
-                // 查询典狱长头像
+                // 查询典狱长用户名（warden或warden2）
                 const string sql = @"
-SELECT w.AvatarPath
+SELECT u.Username
 FROM wt.TrialSession ts
 INNER JOIN wt.[User] u ON u.UserID = ts.CreatedBy
-LEFT JOIN wt.UserWitch uw ON uw.UserID = u.UserID
-LEFT JOIN wt.Witch w ON w.WitchID = uw.WitchID
 WHERE ts.SessionID = @SessionID";
 
                 var dt = WitchTrialSystem.DAL.DBHelper.ExecDataTable(sql,
                     new Microsoft.Data.SqlClient.SqlParameter("@SessionID", _notification.SessionID));
                 
-                if (dt.Rows.Count > 0 && dt.Rows[0]["AvatarPath"] != DBNull.Value)
+                if (dt.Rows.Count > 0 && dt.Rows[0]["Username"] != DBNull.Value)
                 {
-                    string avatarPath = dt.Rows[0]["AvatarPath"].ToString() ?? "";
-                    string fullPath = Path.Combine(AppContext.BaseDirectory, avatarPath);
+                    string username = dt.Rows[0]["Username"].ToString() ?? "";
                     
-                    if (File.Exists(fullPath))
+                    // 根据用户名加载对应的头像（warden.png或warden2.png）
+                    string avatarFileName = $"{username}.png";
+                    string avatarPath = Path.Combine(AppContext.BaseDirectory, "Images", avatarFileName);
+                    
+                    if (File.Exists(avatarPath))
                     {
-                        _picAvatar.Image = Image.FromFile(fullPath);
+                        _picAvatar.Image = Image.FromFile(avatarPath);
+                        return;
                     }
-                    else
+                    
+                    // 如果没有找到，尝试在Images/characters目录
+                    avatarPath = Path.Combine(AppContext.BaseDirectory, "Images", "characters", avatarFileName);
+                    if (File.Exists(avatarPath))
                     {
-                        LoadDefaultAvatar();
+                        _picAvatar.Image = Image.FromFile(avatarPath);
+                        return;
                     }
                 }
-                else
-                {
-                    LoadDefaultAvatar();
-                }
+                
+                LoadDefaultAvatar();
             }
             catch
             {
@@ -108,12 +112,25 @@ WHERE ts.SessionID = @SessionID";
 
         private void LoadDefaultAvatar()
         {
-            // 使用默认头像
-            string defaultPath = Path.Combine(AppContext.BaseDirectory, "Images", "avatars", "default.png");
-            if (File.Exists(defaultPath))
+            // 使用默认典狱长头像
+            string[] possiblePaths = new[]
             {
-                _picAvatar.Image = Image.FromFile(defaultPath);
+                Path.Combine(AppContext.BaseDirectory, "Images", "warden.png"),
+                Path.Combine(AppContext.BaseDirectory, "Images", "Jailer.png"),
+                Path.Combine(AppContext.BaseDirectory, "Images", "characters", "warden.png")
+            };
+            
+            foreach (var path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    _picAvatar.Image = Image.FromFile(path);
+                    return;
+                }
             }
+            
+            // 如果都没有，显示占位图
+            _picAvatar.BackColor = Color.LightGray;
         }
 
         protected override void Dispose(bool disposing)
