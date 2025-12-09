@@ -41,6 +41,7 @@ namespace WitchTrialSystem.UI
             _currentStatus = currentStatus ?? "未知";
             
             InitializeComponents();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadStatuses();
         }
 

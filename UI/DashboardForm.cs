@@ -27,6 +27,9 @@ namespace WitchTrialSystem.UI
         private readonly int? _userIslandId;
         private readonly DashboardService _service = new();
         private System.Windows.Forms.Timer? _refreshTimer;
+        
+        // 当前选中的岛屿（用于Admin切换岛屿）
+        private int? _currentSelectedIslandId;
 
         // UI控件
         private Panel _topPanel = new();
@@ -49,6 +52,8 @@ namespace WitchTrialSystem.UI
         private FormsPlot _globalPieChart = new();
         private Panel _islandsPanel = new();
         private FormsPlot _heatmapChart = new();
+        private Panel _heatmapPanel = new();  // 热力图面板
+        private ComboBox _cmbIslandSelector = new();  // 岛屿选择下拉框（放在热力图标题栏）
 
         #endregion
 
@@ -62,6 +67,11 @@ namespace WitchTrialSystem.UI
             _username = username;
             _roleName = roleName;
             _userIslandId = userIslandId;
+            
+            // 初始化当前选中的岛屿
+            // Regulator用户：使用自己管理的岛屿
+            // Admin用户：默认选择第一个岛屿（后续可切换）
+            _currentSelectedIslandId = userIslandId;
 
             // 加载自定义中文字体文件
             LoadChineseFont();
@@ -159,6 +169,30 @@ namespace WitchTrialSystem.UI
             _timeLabel.AutoSize = true;
             _topPanel.Controls.Add(_timeLabel);
 
+            // 岛屿选择器（仅Admin可见）
+            if (_roleName == "Admin")
+            {
+                var lblIsland = new Label
+                {
+                    Text = "选择岛屿：",
+                    Font = new Font("微软雅黑", 10),
+                    ForeColor = Color.White,
+                    AutoSize = true
+                };
+                _topPanel.Controls.Add(lblIsland);
+
+                _cmbIslandSelector.Font = new Font("微软雅黑", 10);
+                _cmbIslandSelector.DropDownStyle = ComboBoxStyle.DropDownList;
+                _cmbIslandSelector.Size = new Size(150, 30);
+                _cmbIslandSelector.BackColor = Color.White;
+                _cmbIslandSelector.ForeColor = Color.Black;
+                _cmbIslandSelector.SelectedIndexChanged += OnIslandSelectionChanged;
+                _topPanel.Controls.Add(_cmbIslandSelector);
+
+                // 加载岛屿列表
+                LoadIslandSelector();
+            }
+
             // 刷新按钮
             _btnRefresh.Text = "🔄 刷新";
             _btnRefresh.Size = new Size(100, 35);
@@ -188,6 +222,19 @@ namespace WitchTrialSystem.UI
                 _btnClose.Location = new Point(rightX - 100, 17);
                 rightX -= 110;
                 _btnRefresh.Location = new Point(rightX - 100, 17);
+                
+                // 岛屿选择器位置（如果是Admin）
+                if (_roleName == "Admin")
+                {
+                    rightX -= 110;
+                    _cmbIslandSelector.Location = new Point(rightX - 150, 20);
+                    rightX -= 160;
+                    var lblIsland = _topPanel.Controls.OfType<Label>().FirstOrDefault(l => l.Text == "选择岛屿：");
+                    if (lblIsland != null)
+                    {
+                        lblIsland.Location = new Point(rightX - lblIsland.Width, 24);
+                    }
+                }
                 
                 // 时间标签居中显示
                 int centerX = (_topPanel.Width - _timeLabel.Width) / 2;
@@ -331,28 +378,115 @@ namespace WitchTrialSystem.UI
 
         #endregion
 
+        #region 岛屿选择器
+
+        /// <summary>
+        /// 加载岛屿选择器数据
+        /// </summary>
+        private void LoadIslandSelector()
+        {
+            if (_roleName != "Admin") return;
+
+            try
+            {
+                _cmbIslandSelector.Items.Clear();
+                
+                // 获取所有岛屿
+                var islands = _service.GetIslands(_username, _roleName, null);
+                
+                foreach (var island in islands)
+                {
+                    _cmbIslandSelector.Items.Add(new IslandItem
+                    {
+                        IslandId = island.IslandId,
+                        Name = island.Name
+                    });
+                }
+
+                // 默认选择第一个岛屿
+                if (_cmbIslandSelector.Items.Count > 0)
+                {
+                    _cmbIslandSelector.SelectedIndex = 0;
+                    var firstIsland = _cmbIslandSelector.Items[0] as IslandItem;
+                    _currentSelectedIslandId = firstIsland?.IslandId;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载岛屿列表失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 岛屿选择变更事件 - 只刷新热力图
+        /// </summary>
+        private void OnIslandSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_cmbIslandSelector.SelectedItem is IslandItem selectedIsland)
+            {
+                _currentSelectedIslandId = selectedIsland.IslandId;
+                // 只刷新热力图，不刷新其他数据
+                RefreshHeatmap();
+            }
+        }
+        
+        /// <summary>
+        /// 刷新热力图数据
+        /// </summary>
+        private void RefreshHeatmap()
+        {
+            try
+            {
+                // 使用当前选中的岛屿ID加载热力图数据
+                var cells = _service.GetBatchStatusCells(_username, _roleName, _currentSelectedIslandId);
+                UpdateHeatmap(cells);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"刷新热力图失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        /// <summary>
+        /// 岛屿选择器项
+        /// </summary>
+        private class IslandItem
+        {
+            public int IslandId { get; set; }
+            public string Name { get; set; } = "";
+
+            public override string ToString() => Name;
+        }
+
+        #endregion
+
         #region 数据加载
 
         private void LoadAllData()
         {
             try
             {
+                // 确定要查询的岛屿ID
+                // Regulator：使用自己管理的岛屿
+                // Admin：使用当前选中的岛屿
+                int? queryIslandId = _roleName == "Admin" ? _currentSelectedIslandId : _userIslandId;
+
                 // 加载统计数据
-                var stats = _service.GetGlobalStats(_username, _roleName, _userIslandId);
+                var stats = _service.GetGlobalStats(_username, _roleName, queryIslandId);
                 _lblWitchCount.Text = stats.TotalWitches.ToString();
                 _lblIslandCount.Text = stats.TotalIslands.ToString();
                 _lblBatchCount.Text = $"{stats.ActiveBatches}/{stats.TotalBatches}";
 
                 // 加载状态分布
-                var statusData = _service.GetStatusDistribution(_username, _roleName, _userIslandId);
+                var statusData = _service.GetStatusDistribution(_username, _roleName, queryIslandId);
                 UpdatePieChart(statusData);
 
                 // 加载岛屿数据
-                var islands = _service.GetIslands(_username, _roleName, _userIslandId);
+                var islands = _service.GetIslands(_username, _roleName, queryIslandId);
                 UpdateIslandsPanel(islands);
 
-                // 加载热力图数据
-                var cells = _service.GetBatchStatusCells(_username, _roleName, _userIslandId);
+                // 加载热力图数据（显示本岛屿的LocalBatch）
+                var cells = _service.GetBatchStatusCells(_username, _roleName, queryIslandId);
                 UpdateHeatmap(cells);
 
                 // 更新时间
@@ -552,26 +686,58 @@ namespace WitchTrialSystem.UI
                 return;
             }
 
-            // 获取所有批次和状态
-            var batches = cells.Select(c => c.LocalBatchId).Distinct().OrderBy(x => x).ToList();
-            var statuses = cells.Select(c => c.Status).Where(s => s != "无").Distinct().ToList();
+            // 固定的6种状态分类（严格按照用户要求的顺序和名称）
+            var statuses = new List<string>
+            {
+                "待抓捕",
+                "分配至岛屿",
+                "审判中",
+                "死亡(正常)",
+                "死亡(魔女化)",
+                "其它"
+            };
 
-            if (batches.Count == 0 || statuses.Count == 0)
+            // 获取所有批次
+            var batches = cells.Select(c => c.LocalBatchId).Distinct().OrderBy(x => x).ToList();
+
+            if (batches.Count == 0)
             {
                 _heatmapChart.Plot.Title("暂无有效数据");
                 _heatmapChart.Refresh();
                 return;
             }
 
-            // 创建热力图数据
+            // 状态映射函数：将数据库中的状态映射到6种固定分类
+            string MapStatus(string dbStatus)
+            {
+                return dbStatus switch
+                {
+                    "待抓捕" => "待抓捕",
+                    "分配至岛屿" => "分配至岛屿",
+                    "审判中" => "审判中",
+                    "死亡（正常）" => "死亡(正常)",  // 注意：数据库可能用全角括号
+                    "死亡(正常)" => "死亡(正常)",
+                    "死亡（魔女化）" => "死亡(魔女化)",  // 注意：数据库可能用全角括号
+                    "死亡(魔女化)" => "死亡(魔女化)",
+                    _ => "其它"  // 所有其他状态（如"已处刑"等）都归入"其它"
+                };
+            }
+
+            // 创建热力图数据（6行 × N列）
             double[,] heatmapData = new double[statuses.Count, batches.Count];
             
-            for (int i = 0; i < statuses.Count; i++)
+            // 遍历所有单元格，将数据映射到固定的6种状态
+            foreach (var cell in cells)
             {
-                for (int j = 0; j < batches.Count; j++)
+                if (cell.Status == "无") continue;
+                
+                string mappedStatus = MapStatus(cell.Status);
+                int statusIndex = statuses.IndexOf(mappedStatus);
+                int batchIndex = batches.IndexOf(cell.LocalBatchId);
+                
+                if (statusIndex >= 0 && batchIndex >= 0)
                 {
-                    var cell = cells.FirstOrDefault(c => c.LocalBatchId == batches[j] && c.Status == statuses[i]);
-                    heatmapData[i, j] = cell?.Count ?? 0;
+                    heatmapData[statusIndex, batchIndex] += cell.Count;
                 }
             }
 
@@ -593,8 +759,12 @@ namespace WitchTrialSystem.UI
                 }
             }
 
-            // 判断是本岛批次还是全局批次（如果用户有岛屿限制，则是本岛批次）
-            string batchLabel = _userIslandId.HasValue ? "本岛批次" : "全局批次";
+            // 确定批次标签类型
+            // Regulator或Admin选择了岛屿：显示"本岛批次"
+            // Admin未选择岛屿：显示"全局批次"
+            string batchLabel = (_roleName == "Admin" && _currentSelectedIslandId.HasValue) || _userIslandId.HasValue 
+                ? "本岛批次" 
+                : "全局批次";
             
             // 设置X轴（批次）标签 - 明确标注批次类型
             _heatmapChart.Plot.Axes.Bottom.Label.Text = batchLabel;
@@ -672,15 +842,8 @@ namespace WitchTrialSystem.UI
         /// </summary>
         private static string GetShortStatus(string status)
         {
-            return status switch
-            {
-                "待分配" => "待分配",
-                "分配至岛屿" => "已分配",
-                "审判中" => "审判中",
-                "死亡（正常）" => "死亡-正常",
-                "死亡（魔女化）" => "死亡-魔女化",
-                _ => status.Length > 6 ? status[..6] : status
-            };
+            // 直接返回状态名称，不做缩写（用户要求使用完全一致的字符串）
+            return status;
         }
 
         #endregion

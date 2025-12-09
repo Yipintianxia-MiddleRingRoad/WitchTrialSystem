@@ -23,6 +23,7 @@ namespace WitchTrialSystem.UI
         {
             Record = record ?? new EducationRecord();
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadData();
         }
 

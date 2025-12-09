@@ -102,6 +102,7 @@ namespace WitchTrialSystem.UI
             _witchId = null;
             _isEditMode = false;
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             InitializeCustomComponents();
             LoadIslands();
         }
@@ -112,6 +113,7 @@ namespace WitchTrialSystem.UI
             _witchId = witchId;
             _isEditMode = true;
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             InitializeCustomComponents();
             LoadIslands();
             LoadWitchData();  // 加载现有数据

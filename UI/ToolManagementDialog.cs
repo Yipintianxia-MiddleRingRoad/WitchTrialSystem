@@ -47,6 +47,7 @@ namespace WitchTrialSystem.UI
             _operation = operation;
             
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             
             Text = operation == ToolOperation.Add ? "添加刑具" : "更换刑具";
             Size = new Size(450, 400);

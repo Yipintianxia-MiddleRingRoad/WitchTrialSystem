@@ -9,6 +9,7 @@
     <Version>1.4.1</Version>
     <AssemblyVersion>1.4.1.0</AssemblyVersion>
     <FileVersion>1.4.1.0</FileVersion>
+    <ApplicationIcon>Images\ui\app_icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

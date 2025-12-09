@@ -87,6 +87,7 @@ namespace WitchTrialSystem.UI
             _isSingleDevice = isSingleDevice;
             
             InitializeForm();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadCustomFont(); // 加载自定义字体
             LoadBackground();
             

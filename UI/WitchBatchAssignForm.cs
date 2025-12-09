@@ -44,6 +44,7 @@ namespace WitchTrialSystem.UI
             _currentLocalBatchId = currentLocalBatchId;
             
             InitializeComponents();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadBatches();
         }
 

@@ -37,6 +37,7 @@ namespace WitchTrialSystem.UI
         {
             _username = username;
             InitializeForm();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadBackground();
             SetupNavigation();
             UpdateTitle();  // 更新标题以包含用户信息

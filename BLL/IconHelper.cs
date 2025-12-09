@@ -6,8 +6,7 @@ using System.Windows.Forms;
 namespace WitchTrialSystem.BLL
 {
     /// <summary>
-    /// 图标管理辅助类
-    /// 统一管理应用程序图标
+    /// 图标帮助类：统一管理应用程序图标
     /// </summary>
     public static class IconHelper
     {
@@ -16,51 +15,50 @@ namespace WitchTrialSystem.BLL
         /// <summary>
         /// 获取应用程序图标
         /// </summary>
-        public static Icon? AppIcon
+        public static Icon? GetAppIcon()
         {
-            get
-            {
-                if (_appIcon == null)
-                {
-                    try
-                    {
-                        // 尝试加载 ICO 文件
-                        string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "ui", "app_icon.ico");
-                        if (File.Exists(icoPath))
-                        {
-                            _appIcon = new Icon(icoPath);
-                        }
-                        else
-                        {
-                            // 如果 ICO 不存在，尝试从 PNG 创建
-                            string pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", "ui", "app_icon.png");
-                            if (File.Exists(pngPath))
-                            {
-                                using (var bitmap = new Bitmap(pngPath))
-                                {
-                                    _appIcon = Icon.FromHandle(bitmap.GetHicon());
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"加载应用图标失败: {ex.Message}");
-                    }
-                }
+            if (_appIcon != null)
                 return _appIcon;
+
+            try
+            {
+                // 尝试加载 .ico 文件
+                string iconPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "app_icon.ico");
+                if (File.Exists(iconPath))
+                {
+                    _appIcon = new Icon(iconPath);
+                    return _appIcon;
+                }
+
+                // 如果 .ico 不存在，尝试从 .png 转换
+                string pngPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "app_icon.png");
+                if (File.Exists(pngPath))
+                {
+                    using var bitmap = new Bitmap(pngPath);
+                    IntPtr hIcon = bitmap.GetHicon();
+                    _appIcon = Icon.FromHandle(hIcon);
+                    return _appIcon;
+                }
             }
+            catch
+            {
+                // 加载失败，返回 null
+            }
+
+            return null;
         }
 
         /// <summary>
         /// 为窗体设置应用程序图标
         /// </summary>
-        /// <param name="form">要设置图标的窗体</param>
         public static void SetFormIcon(Form form)
         {
-            if (form != null && AppIcon != null)
+            if (form == null) return;
+
+            var icon = GetAppIcon();
+            if (icon != null)
             {
-                form.Icon = AppIcon;
+                form.Icon = icon;
             }
         }
     }

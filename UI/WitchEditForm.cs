@@ -97,6 +97,7 @@ namespace WitchTrialSystem.UI
         {
             _witchId = witchId;
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             InitializeCustomComponents();
             LoadWitchData();
         }

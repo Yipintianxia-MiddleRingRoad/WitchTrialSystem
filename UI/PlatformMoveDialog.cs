@@ -40,6 +40,7 @@ namespace WitchTrialSystem.UI
             _isToTrialHall = isToTrialHall;
             
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             
             Text = isToTrialHall ? "移动到审判庭" : "返回原位";
             Size = new Size(450, 350);

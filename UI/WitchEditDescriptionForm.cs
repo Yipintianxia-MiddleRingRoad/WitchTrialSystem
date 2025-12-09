@@ -30,6 +30,7 @@ namespace WitchTrialSystem.UI
             _dal = new WitchDAL();
 
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             LoadData(currentDescription);
         }
 

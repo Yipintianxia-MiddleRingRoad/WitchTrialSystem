@@ -20,6 +20,7 @@ namespace WitchTrialSystem.UI
         {
             _aiService = new AIService(apiKey, modelId);
             InitializeComponent();
+            BLL.IconHelper.SetFormIcon(this);  // 设置应用程序图标
             
             // 显示欢迎消息
             AddAIMessage("你好！我是魔女审判系统的智能助手。\n\n我已经学习了项目的所有文档，可以回答关于系统架构、数据库结构、权限体系等问题。\n\n有什么可以帮助你的吗？");

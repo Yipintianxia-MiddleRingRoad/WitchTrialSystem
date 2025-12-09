@@ -177,13 +177,16 @@ namespace WitchTrialSystem.BLL
         public List<BatchStatusCell> GetBatchStatusCells(string username, string role, int? userIslandId = null)
         {
             DataTable dt;
-            if (role == "Admin")
-            {
-                dt = _dal.GetBatchStatusMatrix();
-            }
-            else if (role == "Meruru" && userIslandId.HasValue)
+            
+            // 如果指定了岛屿ID（Admin选择了岛屿或Regulator的岛屿），则按岛屿过滤
+            if (userIslandId.HasValue)
             {
                 dt = _dal.GetBatchStatusMatrix(userIslandId.Value);
+            }
+            else if (role == "Admin")
+            {
+                // Admin未选择岛屿时，显示所有岛屿数据
+                dt = _dal.GetBatchStatusMatrix();
             }
             else
             {
