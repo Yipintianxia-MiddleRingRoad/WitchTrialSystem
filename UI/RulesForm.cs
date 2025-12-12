@@ -95,7 +95,6 @@ namespace WitchTrialSystem.UI
         public RulesForm(string username) : base(username)
         {
             Text = "图鉴 · 规定";
-            BLL.IconHelper.SetFormIcon(this);  // 设置窗体图标
             UpdateTitle();  // 添加用户信息到标题
             LoadCustomFont();  // 加载自定义字体
             InitializeLayout();
@@ -238,7 +237,7 @@ namespace WitchTrialSystem.UI
         private void PositionPanels()
         {
             // 中部左侧面板：规定名称显示（大幅增加尺寸确保文字完全显示）
-            _leftPanel.Width = (int)(ClientSize.Width * 0.6);  // 增加到60%的窗口宽度
+            _leftPanel.Width = (int)(ClientSize.Width * 0.5);  // 增加到60%的窗口宽度
             _leftPanel.Height = 300;  // 大幅增加高度到200像素
             _leftPanel.Left = 30;  // 再往左移一点点
             // 将规定名称区域放在页面中部略偏上：按窗口高度的 45% 位置居中
@@ -249,9 +248,9 @@ namespace WitchTrialSystem.UI
             CenterRuleLabels();
 
             // 中部右侧面板：规定内容显示（适应左侧面板的大幅变化）
-            _rightPanel.Width = (int)(ClientSize.Width * 0.35) - 50;  // 相应缩小到35%的窗口宽度
+            _rightPanel.Width = (int)(ClientSize.Width * 0.4) - 50;  // 相应缩小到35%的窗口宽度
             _rightPanel.Height = ClientSize.Height - 300;  // 底部往上提
-            _rightPanel.Left = (int)(ClientSize.Width * 0.6) + 20;  // 紧跟左侧面板
+            _rightPanel.Left = (int)(ClientSize.Width * 0.6)-70;  // 紧跟左侧面板
             _rightPanel.Top = 80;
 
             // 内容滚动容器（直接放在右侧面板顶部）
@@ -415,13 +414,13 @@ namespace WitchTrialSystem.UI
             if (_romanNumeralLabel != null && _ruleNameLabel != null && _leftPanel != null)
             {
                 // 罗马数字：重新定位，确保在面板内完整显示
-                int romanLeft = Math.Max(10, (_leftPanel.Width - _romanNumeralLabel.Width) / 2 - 90);  // 向左移动20像素
+                int romanLeft = Math.Max(10, (_leftPanel.Width - _romanNumeralLabel.Width) / 2 - 30);  // 向左移动20像素
                 romanLeft = Math.Min(romanLeft, _leftPanel.Width - _romanNumeralLabel.Width - 10);  // 确保不超出右边界
                 _romanNumeralLabel.Left = romanLeft;
                 _romanNumeralLabel.Top = 150;  // 向下移动50像素
 
                 // 中文名称：重新定位，确保在面板内完整显示
-                int ruleLeft = Math.Max(10, (_leftPanel.Width - _ruleNameLabel.Width) / 2 - 90);  // 向左移动20像素
+                int ruleLeft = Math.Max(10, (_leftPanel.Width - _ruleNameLabel.Width) / 2 - 30);  // 向左移动20像素
                 ruleLeft = Math.Min(ruleLeft, _leftPanel.Width - _ruleNameLabel.Width - 10);  // 确保不超出右边界
                 _ruleNameLabel.Left = ruleLeft;
                 _ruleNameLabel.Top = 120 + 130;  // 向下移动50像素
@@ -480,7 +479,7 @@ namespace WitchTrialSystem.UI
             string fileName = _ruleFiles[index];
             string filePath = Path.Combine(AppContext.BaseDirectory, "Images", "Rules", fileName);
 
-            // 读取.md文件
+            // 直接读取.md文件
             if (File.Exists(filePath))
             {
                 try
