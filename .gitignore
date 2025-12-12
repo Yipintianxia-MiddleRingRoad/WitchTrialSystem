@@ -7,7 +7,7 @@ obj/
 *.cache
 
 # 配置文件（包含个人数据库连接信息，不要上传）
-appsettings.json
+# appsettings.json  # 已注释，允许上传（API已关闭）
 
 # 编译输出
 *.dll
