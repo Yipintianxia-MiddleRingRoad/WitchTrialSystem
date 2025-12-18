@@ -78,6 +78,13 @@ namespace WitchTrialSystem.UI
             BackColor = Color.Transparent,
             Cursor = Cursors.Hand
         };
+
+        // 垃圾桶按钮（聊天入口，具体位置根据背景图上的垃圾桶图标调整）
+        private readonly Panel _btnTrash = new()
+        {
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
         
         #endregion
 
@@ -205,6 +212,12 @@ namespace WitchTrialSystem.UI
             _btnCamera.Top = 120 + 171 + 140 + 20;  // 与录音按钮同行：451
             _bg.Controls.Add(_btnCamera);
 
+            // 垃圾桶按钮（聊天入口，位置按手机背景图上的垃圾桶图标大致估算，可根据需要微调）
+            _btnTrash.Size = new Size(60, 60);
+            _btnTrash.Left = ClientSize.Width - 80; // 右侧靠近边缘
+            _btnTrash.Top = ClientSize.Height - 160; // 靠近底部
+            _bg.Controls.Add(_btnTrash);
+
             // 绑定点击事件
             _btnPokedex.Click += OnPokedexClick;
             _btnGomoku.Click += OnGomokuClick;
@@ -216,6 +229,7 @@ namespace WitchTrialSystem.UI
             _btnLive.Click += OnLiveClick;
             _btnRecord.Click += OnRecordClick;
             _btnCamera.Click += OnCameraClick;
+            _btnTrash.Click += OnTrashClick;
 
             // 确保按钮在最上层
             _btnPokedex.BringToFront();
@@ -228,6 +242,7 @@ namespace WitchTrialSystem.UI
             _btnLive.BringToFront();
             _btnRecord.BringToFront();
             _btnCamera.BringToFront();
+            _btnTrash.BringToFront();
         }
         
         #endregion
@@ -539,11 +554,14 @@ WHERE u.Username = @Username";
         }
 
         /// <summary>
-        /// 点击录音按钮
+        /// 点击录音按钮：跳转到录音界面
         /// </summary>
         private void OnRecordClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("录音功能开发中……", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var recordingForm = new RecordingForm(_username);
+            recordingForm.FormClosed += (s, args) => this.Show();  // 录音窗口关闭时显示手机界面
+            this.Hide();
+            recordingForm.Show();
         }
 
         /// <summary>
@@ -555,6 +573,17 @@ WHERE u.Username = @Username";
             cameraForm.FormClosed += (s, args) => this.Show();  // 相机窗口关闭时显示手机界面
             this.Hide();
             cameraForm.Show();
+        }
+
+        /// <summary>
+        /// 点击垃圾桶按钮：打开聊天页面
+        /// </summary>
+        private void OnTrashClick(object? sender, EventArgs e)
+        {
+            var chatForm = new ChatForm(_username);
+            chatForm.FormClosed += (s, args) => this.Show(); // 聊天窗口关闭时返回手机界面
+            this.Hide();
+            chatForm.Show();
         }
 
         /// <summary>
