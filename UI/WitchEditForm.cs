@@ -574,7 +574,8 @@ namespace WitchTrialSystem.UI
             tab.Controls.Add(lblAvatarPath);
             tab.Controls.Add(txtAvatarPath);
             
-            btnBrowseAvatar = new Button { Text = "浏览...", Location = new Point(540, y - 2), Size = new Size(80, 25) };
+            // 加高按钮以避免“浏览”二字被裁剪
+            btnBrowseAvatar = new Button { Text = "浏览...", Location = new Point(540, y - 4), Size = new Size(80, 30) };
             btnBrowseAvatar.Click += BtnBrowseAvatar_Click;
             tab.Controls.Add(btnBrowseAvatar);
         }
@@ -629,7 +630,9 @@ namespace WitchTrialSystem.UI
             Label lblNote = new Label();
             lblNote.Text = "提示：勾选复选框后才会保存对应的时间。\n所有时间字段都是可选的，可以后续补充。";
             lblNote.Location = new Point(20, y);
-            lblNote.Size = new Size(600, 40);
+            // 自动根据内容增高，并限制最大宽度，防止被截断
+            lblNote.AutoSize = true;
+            lblNote.MaximumSize = new Size(820, 0);
             lblNote.ForeColor = Color.Gray;
             tab.Controls.Add(lblNote);
         }

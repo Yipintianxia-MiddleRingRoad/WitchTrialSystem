@@ -59,24 +59,30 @@ namespace WitchTrialSystem.UI
                 _bg.BackgroundImage = Image.FromFile(bgPath);
             }
             
+            // 标题与说明统一文字颜色（偏暖的浅棕色）
+            var mainTextColor = Color.FromArgb(0xC5, 0xB3, 0xAE);
+
             // 标题 - 向右移动37px，向下移动59px，背景透明
             _lblTitle.Location = new Point(57, 79);
-            _lblTitle.ForeColor = Color.White;
+            _lblTitle.ForeColor = mainTextColor;
             _lblTitle.BackColor = Color.Transparent;
             
             // 说明文字 - 向右移动37px，向下移动59px，背景透明
             _lblInstruction.Location = new Point(57, 114);
-            _lblInstruction.ForeColor = Color.LightGray;
+            _lblInstruction.ForeColor = mainTextColor;
             _lblInstruction.BackColor = Color.Transparent;
             
             // 参与者列表容器 - 背景透明以显示手机背景图
-            _flowPanel.Location = new Point(20, 90);
-            _flowPanel.Size = new Size(420, 580);
+            // 整体向右下移动，使卡片完全落在“手机屏幕”内，不被边框裁剪
+            _flowPanel.Location = new Point(40, 140);
+            // 略微缩小宽高，为左右和底部边框预留空间，同时保证底部按钮不被遮挡
+            _flowPanel.Size = new Size(390, 480);
             _flowPanel.Padding = new Padding(5);
             _flowPanel.BackColor = Color.Transparent;
             
             // 确认按钮
-            _btnConfirm.Location = new Point((Width - _btnConfirm.Width) / 2, 685);
+            // 向上移动按钮位置，避免在小屏幕或缩放下被遮挡
+            _btnConfirm.Location = new Point((Width - _btnConfirm.Width) / 2, 650);
             _btnConfirm.BackColor = Color.FromArgb(220, 50, 50);
             _btnConfirm.ForeColor = Color.White;
             _btnConfirm.FlatStyle = FlatStyle.Flat;
@@ -115,7 +121,8 @@ namespace WitchTrialSystem.UI
                 Width = 125,
                 Height = 170,
                 Margin = new Padding(5),
-                BackColor = Color.FromArgb(50, 50, 50)
+                // 使用透明背景，让头像PNG的透明区域直接透出下方界面
+                BackColor = Color.Transparent
             };
             
             // 头像
@@ -125,7 +132,8 @@ namespace WitchTrialSystem.UI
                 Height = 100,
                 Left = 12,
                 Top = 10,
-                SizeMode = PictureBoxSizeMode.StretchImage
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = Color.Transparent  // 保证PNG透明区域不被底色填充
             };
             
             string avatarPath = Path.Combine(AppContext.BaseDirectory, participant.AvatarPath);

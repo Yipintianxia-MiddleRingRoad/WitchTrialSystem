@@ -75,14 +75,20 @@ namespace WitchTrialSystem.UI
             {
                 Dock = DockStyle.Top,
                 Height = 100,
-                Padding = new Padding(15)
+                Padding = new Padding(15),
+                // 让顶部区域与窗体背景融为一体，避免形成单独的“色块”
+                BackColor = Color.Transparent
             };
             
-            _lblTitle.Location = new Point(15, 15);
-            _lblCount.Location = new Point(15, 45);
+            // 整体向上移动标题和计数标签，避免与下方列表视觉重叠
+            _lblTitle.Location = new Point(15, 8);
+            _lblTitle.BackColor = Color.Transparent;
+            _lblCount.Location = new Point(15, 38);
+            _lblCount.BackColor = Color.Transparent;
             
-            var lblBatch = new Label { Text = "批次：", AutoSize = true, Location = new Point(15, 70) };
-            _cbBatch.Location = new Point(60, 67);
+            // 批次选择说明保持在左侧，只将下拉框整体向右移动，减少与前面文字的拥挤感
+            var lblBatch = new Label { Text = "批次：", AutoSize = true, Location = new Point(15, 70), BackColor = Color.Transparent };
+            _cbBatch.Location = new Point(90, 67);
             
             topPanel.Controls.Add(_lblTitle);
             topPanel.Controls.Add(_lblCount);

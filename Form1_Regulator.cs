@@ -424,8 +424,8 @@ namespace WitchTrialSystem
                 var cols = _grid.Columns;
                 int displayIndex = 0;
                 
-                // 显示记录数
-                _status.Text = $"共 {dt.Rows.Count} 条";
+                // 提示编辑方式
+                _status.Text = "双击或右键可进入编辑界面";
                 
                 // 岛屿信息（放在最前面）
                 var c = cols["IslandID"];      
@@ -521,7 +521,7 @@ namespace WitchTrialSystem
                     c.DisplayIndex = displayIndex++;
                 }
 
-                _status.Text = $"共 {dt.Rows.Count} 条";
+                _status.Text = "双击或右键可进入编辑界面";
             }
             catch (Exception ex)
             {

@@ -60,7 +60,8 @@ namespace WitchTrialSystem.UI
         #region 构造函数
 
         // 中文字体名称
-        private const string ChineseFontName = "方正小标宋简体";
+        // 这里优先使用系统自带、已验证支持中文的字体名称
+        private const string ChineseFontName = "Microsoft YaHei UI";
 
         public DashboardForm(string username, string roleName, int? userIslandId = null)
         {
@@ -89,14 +90,16 @@ namespace WitchTrialSystem.UI
         {
             try
             {
-                // 尝试加载自定义字体文件
-                string fontPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Fonts", "方正小标宋简.ttf");
+                // 如果存在自带中文字体文件，可以在此注册（可选，不强依赖）
+                string fontPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Fonts", "msyh.ttf");
                 if (System.IO.File.Exists(fontPath))
                 {
-                    // 注册字体文件
                     ScottPlot.Fonts.AddFontFile(ChineseFontName, fontPath);
-                    ScottPlot.Fonts.Default = ChineseFontName;
                 }
+
+                // 无论是否加载到自定义文件，都把 ScottPlot 默认字体设置为一个
+                // 在 Windows 上稳定存在且支持中文的字体名称
+                ScottPlot.Fonts.Default = ChineseFontName;
             }
             catch
             {
@@ -104,14 +107,6 @@ namespace WitchTrialSystem.UI
             }
         }
         
-        /// <summary>
-        /// 获取中文字体名称
-        /// </summary>
-        private string GetChineseFontPath()
-        {
-            return ChineseFontName;
-        }
-
 
         private void InitializeForm()
         {
@@ -307,7 +302,7 @@ namespace WitchTrialSystem.UI
             valueLabel = new Label
             {
                 Text = value,
-                Font = new Font("微软雅黑", 28, FontStyle.Bold),
+                Font = new Font("微软雅黑", 20, FontStyle.Bold),
                 ForeColor = DashboardColors.TextPrimary,
                 AutoSize = true,
                 MaximumSize = new Size(440, 50),  // 设置最大宽度，防止被截断
@@ -523,8 +518,8 @@ namespace WitchTrialSystem.UI
                 slice.LabelStyle.ForeColor = ScottPlot.Colors.White;
                 slice.LabelStyle.FontSize = 24;
                 slice.LabelStyle.Bold = true;
-                // 使用系统字体名称
-                slice.LabelStyle.FontName = "Microsoft YaHei";
+                // 使用全局默认中文字体
+                slice.LabelStyle.FontName = ScottPlot.Fonts.Default;
                 slices.Add(slice);
             }
 
@@ -742,10 +737,10 @@ namespace WitchTrialSystem.UI
             }
 
             var heatmap = _heatmapChart.Plot.Add.Heatmap(heatmapData);
+            // 使用默认的 Turbo 热力图配色（人数越多颜色越“热”）
             heatmap.Colormap = new ScottPlot.Colormaps.Turbo();
             
             // 在每个单元格上添加数字标注 - 显示所有值包括0
-            string fontPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Fonts", "msyh.ttf");
             for (int i = 0; i < statuses.Count; i++)
             {
                 for (int j = 0; j < batches.Count; j++)
@@ -755,7 +750,8 @@ namespace WitchTrialSystem.UI
                     text.LabelFontSize = 16;
                     text.LabelBold = true;
                     text.LabelFontColor = ScottPlot.Colors.White;
-                    text.LabelFontName = "Microsoft YaHei";  // 使用系统字体
+                    // 使用全局默认中文字体
+                    text.LabelFontName = ScottPlot.Fonts.Default;
                 }
             }
 
@@ -771,10 +767,7 @@ namespace WitchTrialSystem.UI
             _heatmapChart.Plot.Axes.Bottom.Label.ForeColor = ScottPlot.Colors.White;
             _heatmapChart.Plot.Axes.Bottom.Label.FontSize = 14;
             _heatmapChart.Plot.Axes.Bottom.Label.Bold = true;
-            if (System.IO.File.Exists(fontPath))
-            {
-                _heatmapChart.Plot.Axes.Bottom.Label.FontName = fontPath;
-            }
+            _heatmapChart.Plot.Axes.Bottom.Label.FontName = ScottPlot.Fonts.Default;
             
             _heatmapChart.Plot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(
                 batches.Select((b, i) => new ScottPlot.Tick(i, $"批次{b}")).ToArray()
@@ -788,10 +781,7 @@ namespace WitchTrialSystem.UI
             _heatmapChart.Plot.Axes.Left.Label.ForeColor = ScottPlot.Colors.White;
             _heatmapChart.Plot.Axes.Left.Label.FontSize = 14;
             _heatmapChart.Plot.Axes.Left.Label.Bold = true;
-            if (System.IO.File.Exists(fontPath))
-            {
-                _heatmapChart.Plot.Axes.Left.Label.FontName = fontPath;
-            }
+            _heatmapChart.Plot.Axes.Left.Label.FontName = ScottPlot.Fonts.Default;
             
             var shortStatuses = statuses.Select(s => GetShortStatus(s)).ToList();
             _heatmapChart.Plot.Axes.Left.TickGenerator = new ScottPlot.TickGenerators.NumericManual(
