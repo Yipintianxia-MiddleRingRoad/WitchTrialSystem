@@ -54,8 +54,8 @@ namespace WitchTrialSystem.UI
 
         private void SetupLayout()
         {
-            // 加载背景图
-            string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "phone_bg.png");
+            // 加载背景图（使用投票界面背景）
+            string bgPath = Path.Combine(AppContext.BaseDirectory, "Images", "ui", "trial_voting_bg.png");
             if (File.Exists(bgPath))
             {
                 _bg.BackgroundImage = Image.FromFile(bgPath);
@@ -64,14 +64,17 @@ namespace WitchTrialSystem.UI
             // 标题
             _lblTitle.Location = new Point((Width - 200) / 2, 80);
             _lblTitle.ForeColor = Color.White;
+            _lblTitle.BackColor = Color.Transparent;
             
             // 处刑对象头像
             _picTarget.Location = new Point((Width - 200) / 2, 150);
             _picTarget.Size = new Size(200, 200);
+            _picTarget.BackColor = Color.Transparent;
             
             // 处刑对象姓名
             _lblTargetName.Location = new Point((Width - 200) / 2, 370);
             _lblTargetName.ForeColor = Color.White;
+            _lblTargetName.BackColor = Color.Transparent;
             
             // 确认按钮
             _btnConfirm.Location = new Point((Width - _btnConfirm.Width) / 2, 600);

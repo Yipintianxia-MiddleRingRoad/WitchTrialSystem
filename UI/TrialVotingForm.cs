@@ -208,40 +208,62 @@ namespace WitchTrialSystem.UI
         {
             // 清空界面
             _bg.Controls.Clear();
-            
-            // 显示等待消息
+            // 显示等待消息（文本背景透明、颜色调整并居中）
             var lblWaiting = new Label
             {
                 Text = "投票成功！",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 18, FontStyle.Bold),
-                ForeColor = Color.LightGreen,
-                Location = new Point(150, 250)
+                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                BackColor = Color.Transparent
             };
-            
+
             var lblProgress = new Label
             {
                 Name = "lblProgress",
                 Text = "投票进度：加载中...",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 12),
-                ForeColor = Color.White,
-                Location = new Point(120, 310)
+                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                BackColor = Color.Transparent
             };
-            
+
             var lblTip = new Label
             {
                 Text = "您可以关闭窗口，切换其他账号继续投票",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 10),
-                ForeColor = Color.Yellow,
-                Location = new Point(90, 360)
+                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                BackColor = Color.Transparent
             };
-            
+
             _bg.Controls.Add(lblWaiting);
             _bg.Controls.Add(lblProgress);
             _bg.Controls.Add(lblTip);
-            
+
+            // 立即布局并居中显示，确保在不同窗口尺寸下也能居中
+            lblWaiting.Left = Math.Max(10, (_bg.ClientSize.Width - lblWaiting.Width) / 2);
+            lblWaiting.Top = (int)(_bg.ClientSize.Height * 0.35);
+
+            lblProgress.Left = Math.Max(10, (_bg.ClientSize.Width - lblProgress.Width) / 2);
+            lblProgress.Top = lblWaiting.Bottom + 20;
+
+            lblTip.Left = Math.Max(10, (_bg.ClientSize.Width - lblTip.Width) / 2);
+            lblTip.Top = lblProgress.Bottom + 10;
+
+            // 窗口布局变化时重新居中
+            _bg.Layout += (s, e) =>
+            {
+                lblWaiting.Left = Math.Max(10, (_bg.ClientSize.Width - lblWaiting.Width) / 2);
+                lblWaiting.Top = (int)(_bg.ClientSize.Height * 0.35);
+
+                lblProgress.Left = Math.Max(10, (_bg.ClientSize.Width - lblProgress.Width) / 2);
+                lblProgress.Top = lblWaiting.Bottom + 20;
+
+                lblTip.Left = Math.Max(10, (_bg.ClientSize.Width - lblTip.Width) / 2);
+                lblTip.Top = lblProgress.Bottom + 10;
+            };
+
             // 启动定时器检查状态
             var timer = new System.Windows.Forms.Timer { Interval = 2000 };
             timer.Tick += (s, e) => CheckVotingProgress(timer, lblProgress);
