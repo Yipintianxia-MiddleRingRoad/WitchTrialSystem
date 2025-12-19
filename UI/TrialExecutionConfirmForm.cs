@@ -63,7 +63,7 @@ namespace WitchTrialSystem.UI
             
             // 标题
             _lblTitle.Location = new Point((Width - 200) / 2, 80);
-            _lblTitle.ForeColor = Color.White;
+            _lblTitle.ForeColor = Color.FromArgb(47, 35, 34);
             _lblTitle.BackColor = Color.Transparent;
             
             // 处刑对象头像
@@ -73,7 +73,7 @@ namespace WitchTrialSystem.UI
             
             // 处刑对象姓名
             _lblTargetName.Location = new Point((Width - 200) / 2, 370);
-            _lblTargetName.ForeColor = Color.White;
+            _lblTargetName.ForeColor = Color.FromArgb(47, 35, 34);
             _lblTargetName.BackColor = Color.Transparent;
             
             // 确认按钮

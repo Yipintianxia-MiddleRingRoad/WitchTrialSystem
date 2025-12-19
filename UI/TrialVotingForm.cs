@@ -60,7 +60,7 @@ namespace WitchTrialSystem.UI
             }
             
             // 标题与说明统一文字颜色（偏暖的浅棕色）
-            var mainTextColor = Color.FromArgb(0xC5, 0xB3, 0xAE);
+            var mainTextColor = Color.FromArgb(47, 35, 34);
 
             // 标题 - 向右移动37px，向下移动59px，背景透明
             _lblTitle.Location = new Point(57, 79);
@@ -214,7 +214,7 @@ namespace WitchTrialSystem.UI
                 Text = "投票成功！",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 18, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                ForeColor = Color.FromArgb(47, 35, 34),
                 BackColor = Color.Transparent
             };
 
@@ -224,7 +224,7 @@ namespace WitchTrialSystem.UI
                 Text = "投票进度：加载中...",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 12),
-                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                ForeColor = Color.FromArgb(47, 35, 34),
                 BackColor = Color.Transparent
             };
 
@@ -233,7 +233,7 @@ namespace WitchTrialSystem.UI
                 Text = "您可以关闭窗口，切换其他账号继续投票",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 10),
-                ForeColor = Color.FromArgb(0xC6, 0xB3, 0xAC),
+                ForeColor = Color.FromArgb(47, 35, 34),
                 BackColor = Color.Transparent
             };
 
