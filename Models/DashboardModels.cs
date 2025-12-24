@@ -149,8 +149,6 @@ namespace WitchTrialSystem.Models
                 "审判中" => StatusTrial,
                 "死亡（正常）" => StatusDeathNormal,
                 "死亡（魔女化）" => StatusDeathWitch,
-                "已处刑" => StatusDeathNormal,
-                "已释放" => Color.FromArgb(25, 135, 84),
                 _ => StatusOther
             };
         }

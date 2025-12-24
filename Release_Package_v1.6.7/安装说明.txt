@@ -1,0 +1,93 @@
+魔女审判系统 v1.6.7 - 安装说明
+================================
+
+【系统要求】
+- Windows 10/11
+- .NET 9.0 运行时（已内置在exe中）
+- SQL Server 2022 或 LocalDB
+
+【快速安装（推荐）】
+
+1. 安装 SQL Server LocalDB
+   - 运行提供的 SqlLocalDB.msi 安装包
+   - 选择"基本"全套选项和 LocalDB 选项
+   - 安装完成后重启电脑
+
+2. 一键启动
+   - 将 Data 文件夹（包含 WitchTrialWT.mdf 和 WitchTrialWT_log.ldf）放入此目录
+   - 双击运行 "一键安装.bat"
+   - 脚本会自动：
+     ✓ 检查 LocalDB 是否安装
+     ✓ 查找 sqlcmd 工具（自动搜索常见路径）
+     ✓ 启动 LocalDB 实例
+     ✓ 附加数据库文件
+     ✓ 验证数据库连接
+     ✓ 启动程序
+
+3. 登录系统
+   - 使用默认账号登录：
+     * 用户名: admin
+     * 密码: 123456
+
+【手动安装（如果一键安装失败）】
+
+1. 安装 SQL Server LocalDB
+   - 运行 SqlLocalDB.msi 安装包
+   - 选择"基本"全套选项和 LocalDB 选项
+
+2. 配置连接字符串
+   - 编辑 appsettings.json 文件
+   - 修改 ConnectionStrings 中的数据库连接地址
+   - 默认配置：Server=.;Database=WitchTrialWT;Trusted_Connection=True;
+
+3. 运行程序
+   - 双击 WitchTrialSystem.exe 启动应用
+
+【文件说明】
+- WitchTrialSystem.exe - 主程序（自包含，无需额外依赖）
+- 一键安装.bat - 自动化安装脚本（推荐使用）
+- appsettings.json - 应用配置文件（需要修改数据库连接）
+- appsettings.example.json - 配置文件示例
+- Fonts/ - 自定义字体文件夹
+- Images/ - 界面资源文件夹
+- WitchTrialSystem.pdb - 调试符号文件（可选）
+- Data/ - 数据库文件夹（需要放入 .mdf 和 .ldf 文件）
+
+【新增功能 v1.6.7】
+✨ 录音功能 - 魔女手机界面录音功能
+✨ 对话功能 - 角色间互相聊天系统
+
+【常见问题】
+
+Q: 一键安装失败，提示找不到 sqlcmd？
+A: 这说明 SQL Server 安装时没有选择"客户端工具"
+   解决方案：
+   1. 重新运行 SQL Server 安装程序
+   2. 选择"修改"选项
+   3. 勾选"客户端工具"中的"命令行实用工具"
+   4. 完成安装后重新运行一键安装.bat
+
+Q: 提示 LocalDB 未安装？
+A: 确保已安装 SQL Server LocalDB
+   1. 运行 SqlLocalDB.msi 安装包
+   2. 安装完成后重启电脑
+   3. 再次运行一键安装.bat
+
+Q: 数据库附加失败？
+A: 检查以下项目：
+   1. Data 文件夹中是否包含 WitchTrialWT.mdf 文件
+   2. 文件是否完整且未被损坏
+   3. 当前用户是否有足够的文件访问权限
+   4. 尝试以管理员身份重新运行一键安装.bat
+
+Q: 程序无法启动？
+A: 确保已安装 .NET 9.0 运行时（通常已包含在 exe 中）
+
+Q: 如何重置密码？
+A: 使用 admin 账号登录后，在管理界面修改用户密码
+
+【技术支持】
+如有问题，请联系开发团队或查看项目文档
+
+版本: v1.6.7
+发布日期: 2025-12-20

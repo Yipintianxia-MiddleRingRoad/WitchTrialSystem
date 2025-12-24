@@ -250,7 +250,7 @@ namespace WitchTrialSystem.BLL
                 if (result <= 0)
                     return (false, "更新审判状态失败");
 
-                // 更新魔女状态为"已处刑"
+                // 更新魔女状态为"审判中"（处刑结束后）
                 if (session.ExecutionTargetWitchID.HasValue)
                 {
                     UpdateWitchStatus(session.ExecutionTargetWitchID.Value);
@@ -379,13 +379,13 @@ namespace WitchTrialSystem.BLL
         }
 
         /// <summary>
-        /// 更新魔女状态为"已处刑"
+        /// 更新魔女状态为"审判中"（处刑结束后）
         /// </summary>
         private static void UpdateWitchStatus(int witchID)
         {
             const string sql = @"
                 UPDATE wt.Witch 
-                SET Status = N'已处刑', 
+                SET Status = N'审判中', 
                     ExecutionResult = N'投票处刑' 
                 WHERE WitchID = @WitchID";
             

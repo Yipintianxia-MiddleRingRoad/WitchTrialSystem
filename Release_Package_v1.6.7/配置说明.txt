@@ -1,0 +1,91 @@
+appsettings.json 配置文件说明
+============================
+
+【默认配置】
+
+当前配置已优化，通常无需修改：
+
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=WitchTrialWT;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "AppSettings": {
+    "DefaultPassword": "123456"
+  },
+  "DouBaoAI": {
+    "ApiKey": "f496d5f5-9c43-490e-8aa2-963ae119a351",
+    "ModelId": "ep-m-20251207205842-g6lvn",
+    "Enabled": false
+  }
+}
+
+【配置说明】
+
+1. ConnectionStrings.DefaultConnection
+   - Server=(localdb)\MSSQLLocalDB 表示本地 LocalDB 实例
+   - Database=WitchTrialWT 是数据库名称
+   - Trusted_Connection=True 使用 Windows 身份验证
+   - TrustServerCertificate=True 信任服务器证书
+
+   其他 Server 配置选项：
+   - Server=. 或 Server=localhost - 本地默认 SQL Server 实例
+   - Server=(local) - 本地默认实例的另一种写法
+   - Server=.\\SQLEXPRESS - 本地 SQLEXPRESS 命名实例
+   - Server=192.168.1.100 - 远程服务器 IP
+   - Server=servername\\instancename - 远程命名实例
+   - Server=(localdb)\MSSQLLocalDB - 本地 LocalDB 实例（推荐用于发布包）
+
+   如果使用 SQL 登录而非 Windows 身份验证：
+   Server=(localdb)\MSSQLLocalDB;Database=WitchTrialWT;User ID=sa;Password=你的密码;TrustServerCertificate=True;
+
+2. AppSettings.DefaultPassword
+   - 新建魔女账号的默认密码
+   - 默认值：123456
+   - 用户登录后可自行修改
+
+3. DouBaoAI
+   - ApiKey: 豆包 AI 的 API Key
+   - ModelId: 豆包 AI 的模型 ID
+   - Enabled: 是否启用 AI 功能（true/false）
+   - 当前已禁用（Enabled: false）
+
+【修改方法】
+
+1. 用文本编辑器打开 appsettings.json
+2. 修改相应的配置值
+3. 保存文件
+4. 重启程序使配置生效
+
+【常见配置场景】
+
+场景1：使用本地 LocalDB（推荐）
+  "DefaultConnection": "Server=.;Database=WitchTrialWT;Trusted_Connection=True;TrustServerCertificate=True;"
+
+场景2：使用远程 SQL Server
+  "DefaultConnection": "Server=192.168.1.100;Database=WitchTrialWT;User ID=sa;Password=你的密码;TrustServerCertificate=True;"
+
+场景3：使用 SQL Server Express 命名实例
+  "DefaultConnection": "Server=.\\SQLEXPRESS;Database=WitchTrialWT;Trusted_Connection=True;TrustServerCertificate=True;"
+
+【启用 AI 功能】
+
+如需启用豆包 AI 功能：
+1. 打开 appsettings.json
+2. 找到 "DouBaoAI" 部分
+3. 将 "Enabled": false 改为 "Enabled": true
+4. 保存并重启程序
+
+【注意事项】
+
+⚠️ JSON 文件格式严格，修改时要小心：
+   - 不要删除引号
+   - 不要删除逗号
+   - 不要添加中文注释
+   - 修改后可用在线 JSON 验证工具检查格式
+
+⚠️ 如果修改错误，程序可能无法启动
+   - 可以恢复原始的 appsettings.json
+   - 或参考 appsettings.example.json 重新配置
+
+版本: v1.6.7
+最后更新: 2025-12-20

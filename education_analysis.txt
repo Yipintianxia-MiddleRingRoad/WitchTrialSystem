@@ -1,0 +1,55 @@
+﻿已将数据库上下文更改为 "WitchTrialWT"。
+PrisonerNo Name KeyCase Spacing JsonLen Sample
+---------- ---- ------- ------- ------- ------
+658 樱羽艾玛 Other NoSpace 180 [{"School":"东京都立樱丘中学校","Degree":"中学校","Status":"毕业","SpecialNote":"初中时旁观好友月代雪霸凌致其自杀，篡改记忆掩盖创伤"},{"Sch
+659 二阶堂希罗 Other NoSpace 175 [{"school":"东京都立樱丘中学校","degree":"中学校","status":"毕业","specialNote":"成绩优异，运动全能，因极端正义观陷入偏执"},{"school":
+660 夏目安安 Other NoSpace 85 [{"school":"东京都立新宿中学校","degree":"中学校","status":"毕业","specialNote":"家里蹲，社交障碍，仅能笔谈交流"}]
+661 城崎诺亚 Other NoSpace 87 [{"school":"大阪府立梅田中学校","degree":"中学校","status":"毕业","specialNote":"街头艺术家，作品全球知名，看穿谎言"}]
+662 莲见蕾娅 Other NoSpace 84 [{"school":"东京都立港区中学校","degree":"中学校","status":"毕业","specialNote":"剧团演员，独立坚韧，隐藏压力"}]
+663 佐伯米莉亚 Other NoSpace 93 [{"school":"埼玉县立埼玉中学校","degree":"中学校","status":"毕业","specialNote":"白辣妹，为合群发私密照被传播，后与律师互换身体"}]
+664 宝生玛格 Other NoSpace 87 [{"school":"东京都立中央区中学校","degree":"中学校","status":"毕业","specialNote":"诈骗专家，观察力敏锐，不信任他人"}]
+665 黑部奈叶香 Other NoSpace 82 [{"school":"京都府立京中学校","degree":"中学校","status":"毕业","specialNote":"了解监牢机制，曾伪装月代雪"}]
+666 紫藤亚里沙 Other NoSpace 86 [{"School":"兵库县立神戸中学校","Degree":"中学校","Status":"毕业","SpecialNote":"离家出走太妹，易怒，情绪管理困难"}]
+667 橘雪莉 Other NoSpace 82 [{"school":"千叶县立千叶中学校","degree":"中学校","status":"毕业","specialNote":"怪力，性格直率，体力超群"}]
+668 远野汉娜 Other NoSpace 84 [{"school":"北海道立札幌中学校","degree":"中学校","status":"毕业","specialNote":"浮游能力，性格温和，渴望自由"}]
+669 泽渡可可 Other NoSpace 85 [{"school":"爱知县立名古屋中学校","degree":"中学校","status":"毕业","specialNote":"千里眼，信息收集者，洞察力强"}]
+671 小鸟游六花 Other HasSpace 188 [{"school": "富山县立大森中学","degree": "中学校","status": "毕业","specialNote": "初中时期因父亲去世陷入中二病，社交圈较窄"},{"schoo
+672 富樫勇太 Other HasSpace 181 [{"school": "私立银杏学园中等部","degree": "中学校","status": "毕业","specialNote": "初中时因中二病被孤立，社交恐惧"},{"school": 
+673 丹生谷森夏 Other HasSpace 178 [{"school": "私立银杏学园中等部","degree": "中学校","status": "毕业","specialNote": "成绩优异，班级干部，隐藏中二过往"},{"school":
+674 五月七日茴香 Other HasSpace 179 [{"school": "私立银杏学园中等部","degree": "中学校","status": "毕业","specialNote": "占卜爱好者，性格温和，观察力敏锐"},{"school":
+675 凸守早苗 Other HasSpace 185 [{"school": "私立银杏学园中等部","degree": "中学校","status": "毕业","specialNote": "元气满满，六花的忠实随从，中二病重度"},{"school
+676 七宫智音 Other HasSpace 85 [{"school": "不明中学校","degree": "中学校","status": "毕业","specialNote": "原勇太的青梅竹马，魔法小提琴手"}]
+677 伊雷娜 Other HasSpace 229 [{"school": "罗贝塔共和国立初等学校","degree": "初等学校","status": "毕业","specialNote": "自幼阅读母亲著作《妮可冒险记》，憧憬魔女职业，在母亲
+678 维多利加 Other HasSpace 242 [{"school": "罗贝塔共和国立孤儿院附属学校","degree": "初等教育","status": "毕业","specialNote": "故乡遭洪水摧毁后入住孤儿院，8岁被发现魔法天赋
+679 沙耶 Other HasSpace 226 [{"school": "极东地区咲樱市立中学","degree": "中学校","status": "毕业","specialNote": "普通家庭出身，偶然目睹伊雷娜飞行魔法后立志成为魔女，学习
+680 芙兰 Other HasSpace 225 [{"school": "罗贝塔共和国立初等学校","degree": "初等学校","status": "毕业","specialNote": "天生拥有星辰感知力，幼时能与星空共鸣，被视为"怪孩子
+681 席拉 Other HasSpace 232 [{"school": "罗贝塔共和国立夜校","degree": "初等教育","status": "毕业","specialNote": "自幼习惯夜间活动，对黑暗有天然亲和力，12岁因能操控暗影
+682 琪琪 Other HasSpace 89 [{"school": "科里科乡村魔法学校","degree": "初中","status": "在读","specialNote": "魔法家族培养，独立生活中不断成长"}]
+684 柊舞缇娜 Other HasSpace 92 [{"school": "东京都立圣樱中学校","degree": "中学校","status": "2年生（初二）在读","specialNote": "成绩中等，在校表现普通"}]
+685 阿良河琪舞 Other HasSpace 95 [{"school": "东京都立原宿中学校","degree": "中学校","status": "2年生（初二）在读","specialNote": "成绩下游，热衷自拍和社交网络"}]
+686 杜乃可莉丝 Other HasSpace 89 [{"school": "东京都立光丘小学校","degree": "小学校","status": "5年生在读","specialNote": "不擅长社交，手工艺天赋强"}]
+687 阿古屋真珠 Other HasSpace 88 [{"school": "福冈县立博多高等学校","degree": "高等学校","status": "毕业","specialNote": "参加轻音部，多次选拔落选"}]
+688 姐母娞摩 Other HasSpace 87 [{"school": "福冈县立福冈中央高等学校","degree": "高等学校","status": "毕业","specialNote": "学生会长，成绩优异"}]
+689 花菱春香 Other HasSpace 96 [{"school": "埼玉县立光之丘中学校","degree": "中学校","status": "3年生（初三）在读","specialNote": "成绩优异，班级委员，领导力强"}]
+690 水神小夜 Other HasSpace 93 [{"school": "神奈川县立港中学校","degree": "中学校","status": "2年生（初二）在读","specialNote": "运动神经发达，文化课稍弱"}]
+691 天川薰子 Other HasSpace 94 [{"school": "大阪府立咲洲中学校","degree": "中学校","status": "3年生（初三）在读","specialNote": "体育万能，性格豪爽，大姐头"}]
+692 相野美都 Other HasSpace 88 [{"school": "峰原高中2年1班","degree": "高中","status": "2年级在读","specialNote": "曾因"青春期症候群"被孤立"}]
+693 平良伊纲 Other HasSpace 166 [{"school": "峰原高中3年1班","degree": "高中","status": "3年级在读","specialNote": "因艺人身份常请假"},{"school": "艺人培训学
+694 江利内美智 Other HasSpace 78 [{"school": "峰原高中1年","degree": "高中","status": "1年级在读","specialNote": "从福冈转学"}]
+695 椎崎咲良 Other HasSpace 160 [{"school": "峰原高中2年","degree": "高中","status": "2年级在读","specialNote": "科学社唯一成员"},{"school": "科学夏令营","
+696 月出Style Other HasSpace 81 [{"school": "峰原初中3年","degree": "初中","status": "初一年级在读","specialNote": "因霸凌休学两年"}]
+697 鹿目圆 Other HasSpace 181 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "性格温柔善良，乐于助人，班级人缘好"},{"school": 
+698 晓美焰 Other HasSpace 185 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "转校生，性格内向，做事严谨，擅长制定计划"},{"school
+699 巴麻美 Other HasSpace 92 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "成绩优异，气质优雅，主动保护后辈魔法少女"}]
+700 美树沙耶香 Other HasSpace 188 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "运动神经发达，喜欢帮助他人，有强烈的正义感"},{"schoo
+701 佐仓杏子 Other HasSpace 91 [{"school": "见泷原市近郊中学","degree": "中学校","status": "毕业","specialNote": "性格叛逆，独自生活，擅长在困境中生存"}]
+702 百江渚 Other HasSpace 88 [{"school": "见泷原市立小学","degree": "小学校","status": "在读","specialNote": "外表像小学生，性格纯真，喜欢甜点"}]
+703 环伊吕波 Other HasSpace 186 [{"school": "神滨市立中学","degree": "中学校","status": "毕业","specialNote": "性格温柔，责任感强，逐渐成长为魔法少女小队队长"},{"scho
+704 七海八千代 Other HasSpace 91 [{"school": "神滨市立中学","degree": "中学校","status": "毕业","specialNote": "魔法少女前辈，战斗经验丰富，性格冷静理智"}]
+705 深月菲莉希 Other HasSpace 88 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "性格活泼，喜欢战斗，擅长近战突袭"}]
+706 天音月夜 Other HasSpace 184 [{"school": "见泷原市周边中学","degree": "中学校","status": "毕业","specialNote": "性格温柔内敛，不擅长表达，擅长辅助魔法"},{"school
+707 水波玲奈 Other HasSpace 186 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "性格开朗，喜欢水相关的事物，擅长水属性魔法"},{"schoo
+708 由比鹤乃 Other HasSpace 183 [{"school": "见泷原市立中学","degree": "中学校","status": "毕业","specialNote": "性格热情活力，像太阳一样温暖，擅长火属性魔法"},{"scho
+709 柊舞缇娜 Other HasSpace 92 [{"school": "东京都立圣樱中学校","degree": "中学校","status": "2年生（初二）在读","specialNote": "成绩中等，在校表现普通"}]
+
+(50 行受影响)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Printing;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using WitchTrialSystem.DAL;
 using WitchTrialSystem.BLL;
+using WitchTrialSystem.Models;
 
 namespace WitchTrialSystem.UI
 {
@@ -275,7 +277,7 @@ namespace WitchTrialSystem.UI
             // ========== 第四部分：教育背景 ==========
             AddSectionTitle(_contentPanel, ref y, "教育背景", contentWidth);
             AddTextBlock(_contentPanel, ref y, "最高学历", GetString("HighestEducation"), contentWidth);
-            AddTextBlock(_contentPanel, ref y, "教育经历", ParseEducationHistory(), contentWidth);
+            AddEducationHistoryTwoColumns(_contentPanel, ref y, contentWidth);
 
             // ========== 第五部分：家庭关系 ==========
             AddSectionTitle(_contentPanel, ref y, "家庭关系", contentWidth);
@@ -374,37 +376,140 @@ namespace WitchTrialSystem.UI
 
             try
             {
-                // 简单解析JSON（实际项目中应使用JSON库）
-                json = json.Replace("[", "").Replace("]", "").Replace("{", "").Replace("}", "");
-                var items = json.Split(new[] { "}," }, StringSplitOptions.RemoveEmptyEntries);
-                var result = "";
-                foreach (var item in items)
+                // 首先尝试使用System.Text.Json解析
+                var options = new System.Text.Json.JsonSerializerOptions
                 {
-                    result += item.Replace("\"", "").Replace(",", "\n  ") + "\n\n";
+                    PropertyNameCaseInsensitive = true,
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip
+                };
+                var records = System.Text.Json.JsonSerializer.Deserialize<List<EducationRecord>>(json, options);
+                if (records == null || records.Count == 0) return "无";
+
+                var result = new System.Text.StringBuilder();
+                int index = 1;
+                
+                foreach (var record in records)
+                {
+                    result.AppendLine($"【{index}】");
+                    if (!string.IsNullOrEmpty(record.School))
+                        result.AppendLine($"  学校：{record.School}");
+                    if (!string.IsNullOrEmpty(record.Degree))
+                        result.AppendLine($"  学位：{record.Degree}");
+                    if (!string.IsNullOrEmpty(record.Status))
+                        result.AppendLine($"  状态：{record.Status}");
+                    if (!string.IsNullOrEmpty(record.SpecialNote))
+                        result.AppendLine($"  备注：{record.SpecialNote}");
+                    result.AppendLine();
+                    index++;
                 }
-                return result.Trim();
+                
+                return result.ToString().Trim();
             }
-            catch
+            catch (System.Text.Json.JsonException jsonEx)
             {
-                return json;
+                // System.Text.Json解析失败，尝试使用Newtonsoft.Json
+                try
+                {
+                    var records = Newtonsoft.Json.JsonConvert.DeserializeObject<List<EducationRecord>>(json);
+                    if (records == null || records.Count == 0) return "无";
+
+                    var result = new System.Text.StringBuilder();
+                    int index = 1;
+                    
+                    foreach (var record in records)
+                    {
+                        result.AppendLine($"【{index}】");
+                        if (!string.IsNullOrEmpty(record.School))
+                            result.AppendLine($"  学校：{record.School}");
+                        if (!string.IsNullOrEmpty(record.Degree))
+                            result.AppendLine($"  学位：{record.Degree}");
+                        if (!string.IsNullOrEmpty(record.Status))
+                            result.AppendLine($"  状态：{record.Status}");
+                        if (!string.IsNullOrEmpty(record.SpecialNote))
+                            result.AppendLine($"  备注：{record.SpecialNote}");
+                        result.AppendLine();
+                        index++;
+                    }
+                    
+                    return result.ToString().Trim();
+                }
+                catch (Exception newtonsoftEx)
+                {
+                    // 两种解析器都失败，返回详细错误信息
+                    // 尝试清理JSON中的特殊字符
+                    string cleanedJson = json.Replace("'", "'").Replace("'", "'").Replace(""", "\"").Replace(""", "\"");
+                    
+                    return $"[教育经历解析失败]\n" +
+                           $"System.Text.Json错误：{jsonEx.Message}\n" +
+                           $"Newtonsoft.Json错误：{newtonsoftEx.Message}\n\n" +
+                           $"JSON长度：{json.Length} 字符\n" +
+                           $"前100字符：{(json.Length > 100 ? json.Substring(0, 100) : json)}\n\n" +
+                           $"建议：请在Admin界面重新编辑并保存此魔女的教育经历";
+                }
+            }
+            catch (Exception ex)
+            {
+                // 其他异常
+                return $"[教育经历解析失败：{ex.GetType().Name}]\n" +
+                       $"错误信息：{ex.Message}\n\n" +
+                       $"JSON长度：{json.Length} 字符\n" +
+                       $"建议：请在Admin界面重新编辑并保存此魔女的教育经历";
             }
         }
 
         private string ParseWorkHistory()
         {
             string json = GetString("WorkHistory");
-            if (string.IsNullOrEmpty(json) || json == "[]") return "";
+            if (string.IsNullOrEmpty(json) || json == "[]") return "无";
 
             try
             {
-                json = json.Replace("[", "").Replace("]", "").Replace("{", "").Replace("}", "");
-                var items = json.Split(new[] { "}," }, StringSplitOptions.RemoveEmptyEntries);
-                var result = "";
+                // 字段名中英文对照
+                var fieldNames = new Dictionary<string, string>
+                {
+                    { "Company", "公司" },
+                    { "Position", "职位" },
+                    { "StartDate", "开始时间" },
+                    { "EndDate", "结束时间" },
+                    { "Department", "部门" },
+                    { "Responsibilities", "职责" },
+                    { "Achievements", "成就" },
+                    { "Salary", "薪资" },
+                    { "ReasonForLeaving", "离职原因" }
+                };
+
+                // 简单解析JSON
+                json = json.Replace("[", "").Replace("]", "");
+                var items = json.Split(new[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
+                var result = new System.Text.StringBuilder();
+                
+                int index = 1;
                 foreach (var item in items)
                 {
-                    result += item.Replace("\"", "").Replace(",", "\n  ") + "\n\n";
+                    var cleanItem = item.Replace("{", "").Replace("}", "").Replace("\"", "");
+                    var fields = cleanItem.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    result.AppendLine($"【{index}】");
+                    
+                    foreach (var field in fields)
+                    {
+                        var parts = field.Split(new[] { ':' }, 2);
+                        if (parts.Length == 2)
+                        {
+                            var key = parts[0].Trim();
+                            var value = parts[1].Trim();
+                            
+                            // 翻译字段名
+                            var displayName = fieldNames.ContainsKey(key) ? fieldNames[key] : key;
+                            result.AppendLine($"  {displayName}：{value}");
+                        }
+                    }
+                    result.AppendLine();
+                    index++;
                 }
-                return result.Trim();
+                
+                return result.ToString().Trim();
             }
             catch
             {
@@ -543,6 +648,125 @@ namespace WitchTrialSystem.UI
             
             parent.Controls.Add(lblValue);
             y += lblValue.Height + 8;  // 从10压缩到8
+        }
+
+        /// <summary>
+        /// 添加教育经历（两列布局）
+        /// </summary>
+        private void AddEducationHistoryTwoColumns(Panel parent, ref int y, int width)
+        {
+            string json = GetString("EducationHistory");
+            if (string.IsNullOrEmpty(json) || json == "[]") return;
+
+            try
+            {
+                // 使用System.Text.Json正确解析，不区分大小写
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var records = System.Text.Json.JsonSerializer.Deserialize<List<EducationRecord>>(json, options);
+                if (records == null || records.Count == 0) return;
+                
+                // 标题
+                var lblTitle = new Label
+                {
+                    Text = "教育经历：",
+                    Location = new Point(0, y),
+                    Width = width,
+                    Height = 18,
+                    Font = new Font("微软雅黑", 8.5f, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(100, 100, 100)
+                };
+                parent.Controls.Add(lblTitle);
+                y += 20;
+
+                int index = 1;
+                foreach (var record in records)
+                {
+                    // 创建字段字典
+                    var fieldDict = new Dictionary<string, string>();
+                    if (!string.IsNullOrEmpty(record.School)) fieldDict["学校"] = record.School;
+                    if (!string.IsNullOrEmpty(record.Degree)) fieldDict["学位"] = record.Degree;
+                    if (!string.IsNullOrEmpty(record.Status)) fieldDict["状态"] = record.Status;
+                    if (!string.IsNullOrEmpty(record.SpecialNote)) fieldDict["备注"] = record.SpecialNote;
+
+                    // 创建面板容器
+                    var panel = new Panel
+                    {
+                        Location = new Point(8, y),
+                        Width = width - 16,
+                        BackColor = Color.FromArgb(250, 250, 250),
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Padding = new Padding(8)
+                    };
+
+                    int panelY = 8;
+                    int columnWidth = (panel.Width - 24) / 2;  // 两列，中间留间隔
+
+                    // 标题【1】【2】
+                    var lblIndex = new Label
+                    {
+                        Text = $"【{index}】",
+                        Location = new Point(8, panelY),
+                        Width = panel.Width - 16,
+                        Height = 20,
+                        Font = new Font("微软雅黑", 9f, FontStyle.Bold),
+                        ForeColor = Color.FromArgb(50, 50, 50)
+                    };
+                    panel.Controls.Add(lblIndex);
+                    panelY += 22;
+
+                    // 分成两列显示
+                    int leftY = panelY;
+                    int rightY = panelY;
+                    int fieldIndex = 0;
+
+                    foreach (var kvp in fieldDict)
+                    {
+                        bool isLeftColumn = (fieldIndex % 2 == 0);
+                        int x = isLeftColumn ? 8 : (columnWidth + 16);
+                        int currentY = isLeftColumn ? leftY : rightY;
+
+                        var lblField = new Label
+                        {
+                            Text = $"{kvp.Key}：{kvp.Value}",
+                            Location = new Point(x, currentY),
+                            Width = columnWidth,
+                            AutoSize = false,
+                            Font = new Font("微软雅黑", 8.5f),
+                            ForeColor = Color.FromArgb(60, 60, 60)
+                        };
+
+                        // 计算高度
+                        using (var g = lblField.CreateGraphics())
+                        {
+                            var size = g.MeasureString(lblField.Text, lblField.Font, columnWidth);
+                            lblField.Height = Math.Max(18, (int)size.Height + 4);
+                        }
+
+                        panel.Controls.Add(lblField);
+
+                        if (isLeftColumn)
+                            leftY += lblField.Height + 4;
+                        else
+                            rightY += lblField.Height + 4;
+
+                        fieldIndex++;
+                    }
+
+                    // 设置面板高度
+                    panel.Height = Math.Max(leftY, rightY) + 8;
+                    parent.Controls.Add(panel);
+                    y += panel.Height + 8;
+                    index++;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果解析失败，使用原来的方法
+                AddTextBlock(parent, ref y, "教育经历", ParseEducationHistory(), width);
+            }
         }
 
         // ========== 导出功能 ==========

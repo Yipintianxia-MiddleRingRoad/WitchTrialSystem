@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -714,7 +714,7 @@ namespace WitchTrialSystem.UI
                     "死亡(正常)" => "死亡(正常)",
                     "死亡（魔女化）" => "死亡(魔女化)",  // 注意：数据库可能用全角括号
                     "死亡(魔女化)" => "死亡(魔女化)",
-                    _ => "其它"  // 所有其他状态（如"已处刑"等）都归入"其它"
+                    _ => "其它"  // 所有其他状态都归入"其它"
                 };
             }
 
@@ -736,9 +736,30 @@ namespace WitchTrialSystem.UI
                 }
             }
 
+            // 创建单元格颜色数组，根据人数分级着色
+            ScottPlot.Color[,] cellColors = new ScottPlot.Color[statuses.Count, batches.Count];
+            for (int i = 0; i < statuses.Count; i++)
+            {
+                for (int j = 0; j < batches.Count; j++)
+                {
+                    int count = (int)heatmapData[i, j];
+                    cellColors[i, j] = GetColorByCount(count);
+                }
+            }
+
             var heatmap = _heatmapChart.Plot.Add.Heatmap(heatmapData);
             // 使用默认的 Turbo 热力图配色（人数越多颜色越“热”）
-            heatmap.Colormap = new ScottPlot.Colormaps.Turbo();
+            // 不使用热力图，直接绘制彩色矩形
+            for (int i = 0; i < statuses.Count; i++)
+            {
+                for (int j = 0; j < batches.Count; j++)
+                {
+                    var rect = _heatmapChart.Plot.Add.Rectangle(j - 0.5, j + 0.5, i - 0.5, i + 0.5);
+                    rect.FillColor = cellColors[i, j];
+                    rect.LineWidth = 1;
+                    rect.LineColor = ScottPlot.Color.FromHex("#555577");
+                }
+            }
             
             // 在每个单元格上添加数字标注 - 显示所有值包括0
             for (int i = 0; i < statuses.Count; i++)
@@ -797,21 +818,31 @@ namespace WitchTrialSystem.UI
             legend.ManualItems.Clear();
             legend.ManualItems.Add(new ScottPlot.LegendItem
             {
-                LabelText = "颜色深浅表示人数多少",
-                FillColor = ScottPlot.Colors.Transparent
+                LabelText = "0人 = 深灰",
+                FillColor = ScottPlot.Color.FromHex("#2a2a3e")
             });
             legend.ManualItems.Add(new ScottPlot.LegendItem
             {
-                LabelText = "深色 = 人数多",
-                FillColor = ScottPlot.Color.FromHex("#FF0000")
+                LabelText = "1人 = 绿色",
+                FillColor = ScottPlot.Color.FromHex("#28a745")
             });
             legend.ManualItems.Add(new ScottPlot.LegendItem
             {
-                LabelText = "浅色 = 人数少",
-                FillColor = ScottPlot.Color.FromHex("#00FF00")
+                LabelText = "2人 = 黄色",
+                FillColor = ScottPlot.Color.FromHex("#ffc107")
+            });
+            legend.ManualItems.Add(new ScottPlot.LegendItem
+            {
+                LabelText = "3-4人 = 橙色",
+                FillColor = ScottPlot.Color.FromHex("#fd7e14")
+            });
+            legend.ManualItems.Add(new ScottPlot.LegendItem
+            {
+                LabelText = "5+人 = 红色",
+                FillColor = ScottPlot.Color.FromHex("#dc3545")
             });
             legend.FontName = ScottPlot.Fonts.Default;
-            legend.FontSize = 12;
+            legend.FontSize = 11;
             legend.FontColor = ScottPlot.Colors.White;
             legend.BackgroundColor = ScottPlot.Color.FromHex("#28283c");
             legend.OutlineColor = ScottPlot.Color.FromHex("#555577");
@@ -825,6 +856,23 @@ namespace WitchTrialSystem.UI
             _heatmapChart.Plot.Axes.Bottom.MinimumSize = 70;  // 增加底部空间给轴标签
 
             _heatmapChart.Refresh();
+        }
+
+        /// <summary>
+        /// 根据人数获取对应的颜色
+        /// </summary>
+        private static ScottPlot.Color GetColorByCount(int count)
+        {
+            if (count == 0)
+                return ScottPlot.Color.FromHex("#2a2a3e");  // 深灰
+            else if (count == 1)
+                return ScottPlot.Color.FromHex("#28a745");  // 绿色
+            else if (count == 2)
+                return ScottPlot.Color.FromHex("#ffc107");  // 黄色
+            else if (count <= 4)
+                return ScottPlot.Color.FromHex("#fd7e14");  // 橙色
+            else
+                return ScottPlot.Color.FromHex("#dc3545");  // 红色
         }
 
         /// <summary>
@@ -881,3 +929,5 @@ namespace WitchTrialSystem.UI
         #endregion
     }
 }
+
+

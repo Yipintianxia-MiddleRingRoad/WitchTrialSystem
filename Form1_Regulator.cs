@@ -425,7 +425,7 @@ namespace WitchTrialSystem
                 int displayIndex = 0;
                 
                 // 提示编辑方式
-                _status.Text = "双击或右键可进入编辑界面";
+                _status.Text = "双击、右键某一行查看详情或编辑";
                 
                 // 岛屿信息（放在最前面）
                 var c = cols["IslandID"];      
@@ -520,8 +520,17 @@ namespace WitchTrialSystem
                     c.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                     c.DisplayIndex = displayIndex++;
                 }
+                
+                // 魔女化方法
+                c = cols["WitchTransformMethod"];
+                if (c != null)
+                {
+                    c.HeaderText = "魔女化方法";
+                    c.Width = 200;
+                    c.DisplayIndex = displayIndex++;
+                }
 
-                _status.Text = "双击或右键可进入编辑界面";
+                _status.Text = "双击、右键某一行查看详情或编辑";
             }
             catch (Exception ex)
             {
@@ -587,9 +596,7 @@ namespace WitchTrialSystem
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
-                var login = new LoginForm();
-                login.Show();
-                this.Close();
+                this.Close(); // 直接关闭，LoginForm会自动显示
             }
         }
 

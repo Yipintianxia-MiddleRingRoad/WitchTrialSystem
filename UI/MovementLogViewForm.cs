@@ -177,8 +177,8 @@ namespace WitchTrialSystem.UI
             var dt = new DataTable();
             dt.Columns.Add("IslandID", typeof(int));
             dt.Columns.Add("Name", typeof(string));
-            dt.Rows.Add(1, "梅露露岛");
-            dt.Rows.Add(2, "乌蒂娜岛");
+            dt.Rows.Add(1, "魔女岛·壹");
+            dt.Rows.Add(2, "魔女岛·贰");
             
             _cbIsland.DisplayMember = "Name";
             _cbIsland.ValueMember = "IslandID";

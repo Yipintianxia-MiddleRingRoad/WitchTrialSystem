@@ -17,6 +17,9 @@ namespace WitchTrialSystem.UI
     {
         #region 控件定义
         
+        // 当前打开的主窗口（确保只有一个实例）
+        private Form? _currentMainForm = null;
+        
         // 背景容器
         private readonly Panel _bg = new() { Dock = DockStyle.Fill, BackgroundImageLayout = ImageLayout.Stretch };
         
@@ -263,8 +266,22 @@ namespace WitchTrialSystem.UI
                         break;
                 }
 
+                // 如果已有主窗口打开，先关闭
+                if (_currentMainForm != null && !_currentMainForm.IsDisposed)
+                {
+                    _currentMainForm.FormClosed -= OnMainFormClosed;  // 移除旧的事件处理
+                    _currentMainForm.Close();
+                    _currentMainForm.Dispose();
+                }
+
                 // 登录成功提示
                 MessageBox.Show("登录成功！", "OK");
+
+                // 保存当前主窗口引用
+                _currentMainForm = main;
+
+                // 主窗口关闭时显示登录窗口并清空账号密码
+                main.FormClosed += OnMainFormClosed;
 
                 // 先隐藏登录窗体，再显示主窗体（体验更顺滑）
                 this.Hide();
@@ -276,6 +293,22 @@ namespace WitchTrialSystem.UI
             {
                 MessageBox.Show("登录异常：" + ex.Message, "Error");
             }
+        }
+
+        /// <summary>
+        /// 主窗口关闭时的处理
+        /// </summary>
+        private void OnMainFormClosed(object? sender, FormClosedEventArgs e)
+        {
+            // 清空账号密码
+            _txtUser.Text = "";
+            _txtPass.Text = "";
+            
+            // 清空主窗口引用
+            _currentMainForm = null;
+            
+            // 显示登录窗口
+            this.Show();
         }
         
         #endregion

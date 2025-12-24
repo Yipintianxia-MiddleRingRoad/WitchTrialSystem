@@ -138,6 +138,20 @@ namespace WitchTrialSystem.UI
             btnViewLog.Click += (s, e) => OpenMovementLogView();
             flow.Controls.Add(btnViewLog);
             
+            // 如果是监管员（Meruru），显示操作提示
+            if (_roleName == "Meruru")
+            {
+                var lblHint = new Label
+                {
+                    Text = "提示：右键刑具可进一步操作",
+                    AutoSize = true,
+                    ForeColor = Color.FromArgb(100, 100, 100),
+                    Font = new Font("Microsoft YaHei UI", 9),
+                    Margin = new Padding(15, 10, 0, 0)
+                };
+                flow.Controls.Add(lblHint);
+            }
+            
             panel.Controls.Add(flow);
             return panel;
         }

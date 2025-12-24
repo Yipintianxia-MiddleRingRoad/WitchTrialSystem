@@ -20,6 +20,8 @@ namespace WitchTrialSystem.UI
         private readonly int _witchId;
         private int _selectedWitchId = 0;
         private bool _hasVoted = false;
+        private bool _hasShownEndMessage = false;  // 防止重复弹窗
+        private System.Windows.Forms.Timer? _statusCheckTimer = null;  // 状态检查定时器
         
         private readonly Panel _bg = new() { Dock = DockStyle.Fill, BackgroundImageLayout = ImageLayout.Stretch };
         private readonly Label _lblTitle = new() { Text = "魔女审判 - 投票", AutoSize = true, Font = new Font("Microsoft YaHei UI", 14, FontStyle.Bold) };
@@ -118,22 +120,24 @@ namespace WitchTrialSystem.UI
         {
             var card = new Panel
             {
-                Width = 125,
-                Height = 170,
-                Margin = new Padding(5),
+                Width = 120,  // 缩小宽度以适应一行三个（390÷3=130，减去margin）
+                Height = 160,  // 稍微缩小高度使布局更紧凑
+                Margin = new Padding(3),  // 减小间距使布局更紧凑
                 // 使用透明背景，让头像PNG的透明区域直接透出下方界面
                 BackColor = Color.Transparent
             };
             
-            // 头像
+            // 头像（可点击）
             var avatar = new PictureBox
             {
-                Width = 100,
-                Height = 100,
+                Width = 95,  // 稍微缩小头像
+                Height = 95,
                 Left = 12,
-                Top = 10,
+                Top = 5,  // 向上移动一点
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.Transparent  // 保证PNG透明区域不被底色填充
+                BackColor = Color.Transparent,  // 保证PNG透明区域不被底色填充
+                Cursor = Cursors.Hand,
+                Tag = participant.WitchID  // 存储WitchID
             };
             
             string avatarPath = Path.Combine(AppContext.BaseDirectory, participant.AvatarPath);
@@ -145,13 +149,36 @@ namespace WitchTrialSystem.UI
             // 单选按钮
             var radioButton = new RadioButton
             {
-                Width = 100,
-                Left = 12,
-                Top = 120,
+                Width = 110,  // 增加宽度以显示完整姓名
+                Left = 5,  // 左对齐
+                Top = 110,  // 调整位置
                 Text = participant.WitchName,
                 Tag = participant.WitchID,
                 ForeColor = Color.White,
-                Font = new Font("Microsoft YaHei UI", 9)
+                Font = new Font("Microsoft YaHei UI", 9),
+                AutoSize = false,  // 禁用自动大小
+                TextAlign = ContentAlignment.MiddleLeft  // 文本左对齐
+            };
+            
+            // 点击头像也能选中
+            avatar.Click += (s, e) =>
+            {
+                // 取消其他所有RadioButton
+                foreach (Control ctrl in _flowPanel.Controls)
+                {
+                    if (ctrl is Panel panel)
+                    {
+                        foreach (Control innerCtrl in panel.Controls)
+                        {
+                            if (innerCtrl is RadioButton rb)
+                            {
+                                rb.Checked = false;
+                            }
+                        }
+                    }
+                }
+                // 选中当前RadioButton
+                radioButton.Checked = true;
             };
             
             radioButton.CheckedChanged += (s, e) =>
@@ -159,6 +186,21 @@ namespace WitchTrialSystem.UI
                 if (radioButton.Checked)
                 {
                     _selectedWitchId = participant.WitchID;
+                    
+                    // 取消其他所有RadioButton（确保只能选一个）
+                    foreach (Control ctrl in _flowPanel.Controls)
+                    {
+                        if (ctrl is Panel panel && panel != card)
+                        {
+                            foreach (Control innerCtrl in panel.Controls)
+                            {
+                                if (innerCtrl is RadioButton rb && rb != radioButton)
+                                {
+                                    rb.Checked = false;
+                                }
+                            }
+                        }
+                    }
                 }
             };
             
@@ -265,9 +307,9 @@ namespace WitchTrialSystem.UI
             };
 
             // 启动定时器检查状态
-            var timer = new System.Windows.Forms.Timer { Interval = 2000 };
-            timer.Tick += (s, e) => CheckVotingProgress(timer, lblProgress);
-            timer.Start();
+            _statusCheckTimer = new System.Windows.Forms.Timer { Interval = 2000 };
+            _statusCheckTimer.Tick += (s, e) => CheckVotingProgress(_statusCheckTimer, lblProgress);
+            _statusCheckTimer.Start();
         }
 
         private void CheckVotingProgress(System.Windows.Forms.Timer timer, Label lblProgress)
@@ -278,6 +320,7 @@ namespace WitchTrialSystem.UI
                 if (session == null)
                 {
                     timer.Stop();
+                    timer.Dispose();
                     return;
                 }
                 
@@ -288,14 +331,22 @@ namespace WitchTrialSystem.UI
                 if (session.Status != "Voting")
                 {
                     timer.Stop();
-                    MessageBox.Show("投票已结束，等待典狱长宣布结果...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
+                    timer.Dispose();
+                    
+                    // 防止重复弹窗
+                    if (!_hasShownEndMessage)
+                    {
+                        _hasShownEndMessage = true;
+                        MessageBox.Show("投票已结束，等待典狱长宣布结果...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 timer.Stop();
+                timer.Dispose();
                 MessageBox.Show($"检查状态失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -311,7 +362,16 @@ namespace WitchTrialSystem.UI
                 if (result == DialogResult.No)
                 {
                     e.Cancel = true;
+                    return;
                 }
+            }
+            
+            // 关键：停止定时器，防止窗口关闭后继续触发
+            if (_statusCheckTimer != null)
+            {
+                _statusCheckTimer.Stop();
+                _statusCheckTimer.Dispose();
+                _statusCheckTimer = null;
             }
             
             base.OnFormClosing(e);

@@ -110,7 +110,7 @@ namespace WitchTrialSystem.UI
         /// </summary>
         private void InitializeForm()
         {
-            Text = $"魔女手机 (当前用户：{_username})";
+            Text = $"魔女手机 ({_username})";
             
             // 根据图片比例设置窗体尺寸（手机屏幕比例）
             Width = 450;
@@ -164,17 +164,23 @@ namespace WitchTrialSystem.UI
             _btnGomoku.Top = ClientSize.Height - 145;  // 底部位置（向上移动25像素：120+25=145）
             _bg.Controls.Add(_btnGomoku);
 
-            // 排行榜按钮（底部第二个，箭头/消息框图标）
-            _btnRanking.Size = new Size(60, 60);  // 底部图标大小
-            _btnRanking.Left = 140;  // 底部第二个图标位置（第一个70，间隔70）
-            _btnRanking.Top = ClientSize.Height - 145;
-            _bg.Controls.Add(_btnRanking);
+            // 垃圾桶按钮（聊天入口，底部第二个，原来在最右边，现在移到第二个位置）
+            _btnTrash.Size = new Size(60, 60);
+            _btnTrash.Left = 140;  // 底部第二个图标位置（第一个70，间隔70）
+            _btnTrash.Top = ClientSize.Height - 145;
+            _bg.Controls.Add(_btnTrash);
 
             // 对局日志按钮（底部第三个，放大镜图标）
             _btnMatchLog.Size = new Size(60, 60);  // 底部图标大小
             _btnMatchLog.Left = 210;  // 底部第三个图标位置（第一个70，间隔70）
             _btnMatchLog.Top = ClientSize.Height - 145;
             _bg.Controls.Add(_btnMatchLog);
+
+            // 排行榜按钮（五子棋积分榜，底部第四个，原来在第二个位置，现在移到第四个位置）
+            _btnRanking.Size = new Size(60, 60);  // 底部图标大小
+            _btnRanking.Left = 280;  // 底部第四个图标位置（第一个70，间隔70）
+            _btnRanking.Top = ClientSize.Height - 145;
+            _bg.Controls.Add(_btnRanking);
 
             // 退出按钮（右上角X）
             _btnExit.Size = new Size(50, 50);
@@ -212,11 +218,7 @@ namespace WitchTrialSystem.UI
             _btnCamera.Top = 120 + 171 + 140 + 20;  // 与录音按钮同行：451
             _bg.Controls.Add(_btnCamera);
 
-            // 垃圾桶按钮（聊天入口，位置按手机背景图上的垃圾桶图标大致估算，可根据需要微调）
-            _btnTrash.Size = new Size(60, 60);
-            _btnTrash.Left = ClientSize.Width - 80; // 右侧靠近边缘
-            _btnTrash.Top = ClientSize.Height - 160; // 靠近底部
-            _bg.Controls.Add(_btnTrash);
+
 
             // 绑定点击事件
             _btnPokedex.Click += OnPokedexClick;
@@ -382,9 +384,6 @@ ORDER BY u.GomokuScore DESC, u.Username ASC";
                 // 检查当前审判状态
                 var state = WitchTrialSystem.BLL.TrialSessionService.GetCurrentState(userInfo.Value.UserID, userInfo.Value.IslandID);
                 
-                // 调试：显示当前状态
-                MessageBox.Show($"调试信息：\nUserID: {userInfo.Value.UserID}\nIslandID: {userInfo.Value.IslandID}\nWitchID: {userInfo.Value.WitchID}\n当前状态: {state}", "调试", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
                 switch (state)
                 {
                     case WitchTrialSystem.Models.TrialState.Idle:
@@ -542,7 +541,7 @@ WHERE u.Username = @Username";
         /// </summary>
         private void OnSettingsClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("设置功能开发中……", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("设置、手电筒、闹钟、电话、手机铃声、恢复出厂设置等功能开发中\n>_<", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -596,9 +595,7 @@ WHERE u.Username = @Username";
             if (result == DialogResult.Yes)
             {
                 _isLoggingOut = true; // 标记正在退出
-                var login = new LoginForm();
-                login.Show();
-                this.Close();
+                this.Close(); // 直接关闭，LoginForm会自动显示
             }
         }
         
@@ -608,7 +605,7 @@ WHERE u.Username = @Username";
         {
             base.OnFormClosing(e);
             
-            // 如果是用户关闭窗口（点击X），返回登录界面
+            // 如果是用户关闭窗口（点击X），询问是否退出登录
             if (e.CloseReason == CloseReason.UserClosing && !_isLoggingOut)
             {
                 e.Cancel = true; // 取消关闭

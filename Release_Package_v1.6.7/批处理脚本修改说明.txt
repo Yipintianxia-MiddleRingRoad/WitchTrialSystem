@@ -1,0 +1,67 @@
+一键安装.bat 脚本修改说明
+==========================
+
+【修改内容】
+
+1. ✅ 版本号更新
+   - 从 v1.6.2 更新为 v1.6.7
+   - 标题改为"一键安装程序"
+
+2. ✅ sqlcmd 工具自动查找
+   - 添加了 sqlcmd 可用性检查
+   - 如果不在 PATH 中，自动搜索常见的 SQL Server 安装路径：
+     * C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\sqlcmd.exe (SQL Server 2019)
+     * C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\sqlcmd.exe (SQL Server 2022)
+   - 如果找不到，提供清晰的解决方案指导
+
+3. ✅ 改进的错误处理
+   - 所有 sqlcmd 调用现在使用 %SQLCMD% 变量
+   - 确保脚本能在 sqlcmd 不在 PATH 中的情况下正常运行
+
+4. ✅ 用户友好的提示
+   - 添加了详细的步骤编号 [1/5] 到 [5/5]
+   - 每个步骤都有清晰的成功/失败提示
+   - 失败时提供具体的解决方案
+
+【工作流程】
+
+脚本执行顺序：
+1. 检查数据库文件是否存在
+2. 检查 LocalDB 是否安装
+3. 检查并定位 sqlcmd 工具
+4. 启动 LocalDB 实例
+5. 附加数据库文件
+6. 验证数据库连接
+7. 启动程序
+
+【适用场景】
+
+✓ 用户只安装了 SQL Server "基本"全套选项
+✓ 用户没有安装 SSMS（SQL Server Management Studio）
+✓ 用户没有安装"客户端工具"中的"命令行实用工具"
+✓ sqlcmd 不在系统 PATH 中
+
+【使用方法】
+
+1. 将 Data 文件夹放入此目录
+2. 双击运行 "一键安装.bat"
+3. 脚本会自动完成所有配置
+4. 程序启动后即可使用
+
+【注意事项】
+
+⚠ 首次运行需要以管理员身份执行（推荐）
+⚠ 需要先安装 SQL Server LocalDB
+⚠ 需要 .NET 9.0 运行时（已内置在 exe 中）
+⚠ 数据库文件必须完整且未被损坏
+
+【故障排除】
+
+如果脚本失败，请检查：
+1. LocalDB 是否已安装并启动
+2. Data 文件夹中是否包含 .mdf 文件
+3. 当前用户是否有足够的文件访问权限
+4. 是否以管理员身份运行脚本
+
+版本: v1.6.7
+修改日期: 2025-12-20

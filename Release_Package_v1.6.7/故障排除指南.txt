@@ -1,0 +1,120 @@
+一键安装.bat 故障排除指南
+==========================
+
+【常见错误及解决方案】
+
+错误1：数据库文件不存在
+─────────────────────
+症状：
+  ❌ 错误：数据库文件不存在！
+  缺少文件：C:\...\Data\WitchTrialWT.mdf
+
+解决方案：
+  1. 检查 Data 文件夹是否存在
+  2. 检查 Data 文件夹中是否有 WitchTrialWT.mdf 文件
+  3. 如果有 "Data备份" 文件夹，重命名为 "Data"
+  4. 确保文件完整，大小应该是 64 MB 左右
+
+错误2：sqlcmd 工具未找到
+─────────────────────
+症状：
+  ❌ 无法找到 sqlcmd 工具
+
+解决方案：
+  1. 重新运行 SQL Server 安装程序
+  2. 选择"修改"选项
+  3. 勾选"客户端工具"中的"命令行实用工具"
+  4. 完成安装后重新运行一键安装.bat
+
+错误3：LocalDB 未安装
+─────────────────────
+症状：
+  ❌ 未检测到 SQL Server LocalDB
+
+解决方案：
+  1. 运行 SQL Server 安装程序
+  2. 勾选 LocalDB 选项
+  3. 完成安装后重启电脑
+  4. 重新运行一键安装.bat
+
+错误4：数据库附加失败
+─────────────────────
+症状：
+  ❌ 数据库附加失败！
+
+可能原因和解决方案：
+  1. 文件权限问题
+     - 右键点击 Data 文件夹 → 属性 → 安全
+     - 确保当前用户有完全控制权限
+     - 如果没有，点击"编辑"添加权限
+
+  2. 文件被占用
+     - 关闭所有 SQL Server 相关程序
+     - 关闭 Visual Studio 或其他数据库工具
+     - 重新运行一键安装.bat
+
+  3. 数据库文件损坏
+     - 检查 Data 文件夹中的文件大小
+     - 如果文件大小异常（太小或为 0），文件可能损坏
+     - 需要重新获取完整的发布包
+
+  4. SQL Server 版本不兼容
+     - 确保使用的是 SQL Server 2022 或更新版本
+     - 旧版本的 SQL Server 可能无法打开新版本的数据库文件
+
+错误5：数据库连接失败
+─────────────────────
+症状：
+  ❌ 数据库连接失败！
+
+解决方案：
+  1. 检查 LocalDB 是否正常运行
+     - 打开命令提示符
+     - 运行：sqllocaldb info MSSQLLocalDB
+     - 应该显示实例信息
+
+  2. 检查数据库是否成功附加
+     - 打开 SQL Server Management Studio (SSMS)
+     - 连接到 (localdb)\MSSQLLocalDB
+     - 查看是否有 WitchTrialWT 数据库
+
+  3. 检查权限
+     - 确保当前 Windows 用户有数据库访问权限
+     - 尝试以管理员身份重新运行一键安装.bat
+
+【调试步骤】
+
+如果以上方案都不能解决问题，请按以下步骤调试：
+
+1. 打开命令提示符（管理员）
+2. 运行以下命令检查 LocalDB 状态：
+   sqllocaldb info MSSQLLocalDB
+
+3. 启动 LocalDB：
+   sqllocaldb start MSSQLLocalDB
+
+4. 测试 sqlcmd 连接：
+   sqlcmd -S "(localdb)\MSSQLLocalDB" -E -Q "SELECT @@VERSION"
+
+5. 如果上述命令都成功，再运行一键安装.bat
+
+【手动附加数据库】
+
+如果一键安装.bat 仍然失败，可以手动附加数据库：
+
+1. 打开 SQL Server Management Studio (SSMS)
+2. 连接到 (localdb)\MSSQLLocalDB
+3. 右键点击"数据库" → "附加"
+4. 点击"添加"，选择 Data 文件夹中的 WitchTrialWT.mdf
+5. 点击"确定"
+
+【获取帮助】
+
+如果问题仍未解决，请提供以下信息：
+1. 完整的错误信息截图
+2. 运行 sqllocaldb info MSSQLLocalDB 的输出
+3. Data 文件夹中文件的大小
+4. Windows 用户名和权限级别
+
+版本: v1.6.7
+最后更新: 2025-12-20
